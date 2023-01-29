@@ -11,7 +11,7 @@ namespace ETModel {
             self.Update();
         }
     }
-    
+ // 把游戏端的异步网络请求：包装成为异步任务    
     public class UnityWebRequestAsync : Component {
         public UnityWebRequest Request;
         public bool isCancel;
@@ -60,11 +60,11 @@ namespace ETModel {
         public Task<bool> DownloadAsync(string url) {
             this.tcs = new TaskCompletionSource<bool>();
             
-            url = url.Replace(" ", "%20");
+            url = url.Replace(" ", "%20"); // 小细节： 大致是一个空格替换成某个符号
             this.Request = UnityWebRequest.Get(url);
             this.Request.SendWebRequest();
             
-            return this.tcs.Task;
+            return this.tcs.Task; // 这里返回的就是网络请求异步任务的结果
         }
     }
 }
