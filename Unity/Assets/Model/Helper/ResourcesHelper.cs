@@ -8,13 +8,11 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace ETModel
-{
-	public static class ResourcesHelper
-	{
-		public static UnityEngine.Object Load(string path)
-		{
-			return Resources.Load(path);
-		}
-	}
+namespace ETModel {
+    public static class ResourcesHelper {
+
+        public static UnityEngine.Object Load(string path) {
+            return Resources.Load(path);
+        }
+    }
 }

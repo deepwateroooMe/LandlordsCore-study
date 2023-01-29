@@ -1,10 +1,8 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+namespace ETModel {
+    public class StartConfig : Entity {
 
-namespace ETModel
-{
-    public class StartConfig : Entity
-    {
         public int AppId { get; set; }
 
         [BsonRepresentation(BsonType.String)]

@@ -1,34 +1,28 @@
 ﻿using System;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace ETModel
-{
-	[BsonIgnoreExtraElements]
-	public abstract class ComponentWithId : Component
-	{
-		[BsonIgnoreIfDefault]
-		[BsonDefaultValue(0L)]
-		[BsonElement]
-		[BsonId]
-		public long Id { get; set; }
+namespace ETModel {
 
-		protected ComponentWithId()
-		{
-		}
+    [BsonIgnoreExtraElements]
+    public abstract class ComponentWithId : Component {
 
-		protected ComponentWithId(long id)
-		{
-			this.Id = id;
-		}
+        [BsonIgnoreIfDefault]
+        [BsonDefaultValue(0L)]
+        [BsonElement]
+        [BsonId]
+        public long Id { get; set; }
 
-		public override void Dispose()
-		{
-			if (this.IsDisposed)
-			{
-				return;
-			}
+        protected ComponentWithId() {
+        }
+        protected ComponentWithId(long id) {
+            this.Id = id;
+        }
 
-			base.Dispose();
-		}
-	}
+        public override void Dispose() {
+            if (this.IsDisposed) {
+                return;
+            }
+            base.Dispose();
+        }
+    }
 }

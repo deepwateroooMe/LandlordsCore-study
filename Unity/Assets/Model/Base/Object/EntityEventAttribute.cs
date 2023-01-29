@@ -1,15 +1,13 @@
 ﻿using System;
+namespace ETModel {
 
-namespace ETModel
-{
-	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-	public class EntityEventAttribute: Attribute
-	{
-		public int ClassType;
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    public class EntityEventAttribute: Attribute {
 
-		public EntityEventAttribute(int classType)
-		{
-			this.ClassType = classType;
-		}
-	}
+        public int ClassType;
+
+        public EntityEventAttribute(int classType) {
+            this.ClassType = classType;
+        }
+    }
 }

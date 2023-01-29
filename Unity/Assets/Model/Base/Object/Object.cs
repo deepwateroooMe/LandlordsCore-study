@@ -1,20 +1,15 @@
 ﻿using System.ComponentModel;
+namespace ETModel {
+    public abstract class Object: ISupportInitialize {
 
-namespace ETModel
-{
-	public abstract class Object: ISupportInitialize
-	{
-		public virtual void BeginInit()
-		{
-		}
+// BeginInit + EndInit
+        public virtual void BeginInit() {
+        }
+        public virtual void EndInit() {
+        }
 
-		public virtual void EndInit()
-		{
-		}
-
-		public override string ToString()
-		{
-			return JsonHelper.ToJson(this);
-		}
-	}
+        public override string ToString() {
+            return JsonHelper.ToJson(this);
+        }
+    }
 }

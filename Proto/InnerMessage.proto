@@ -314,7 +314,7 @@
         long SessionID = 3;
     }
 
-    message M2G_PlayerEnterMatch_Ack // IResponse
+    message M2G_PlayerEnterMatch_Ack // IResponse: 这是一个Map 2 Gate吗?是说我的服务器不能只有一个实例一台登录服,好歹来个gate来个map?
     {
 		int32 RpcId = 90;
 		int32 Error = 91;

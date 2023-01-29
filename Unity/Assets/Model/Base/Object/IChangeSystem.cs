@@ -1,25 +1,21 @@
 ﻿using System;
+namespace ETModel {
 
-namespace ETModel
-{
-	public interface IChangeSystem
-	{
-		Type Type();
-		void Run(object o);
-	}
+    public interface IChangeSystem {
+        Type Type();
+        void Run(object o);
+    }
 
-	public abstract class ChangeSystem<T> : IChangeSystem
-	{
-		public void Run(object o)
-		{
-			this.Change((T)o);
-		}
+    public abstract class ChangeSystem<T> : IChangeSystem {
 
-		public Type Type()
-		{
-			return typeof(T);
-		}
+        public void Run(object o) {
+            this.Change((T)o);
+        }
 
-		public abstract void Change(T self);
-	}
+        public Type Type() {
+            return typeof(T);
+        }
+
+        public abstract void Change(T self);
+    }
 }

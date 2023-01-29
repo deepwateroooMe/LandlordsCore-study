@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace ETModel
-{
-	[AttributeUsage(AttributeTargets.Class)]
-	public class ILAdapterAttribute : Attribute
-	{
-	}
+namespace ETModel {
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public class ILAdapterAttribute : Attribute {
+    }
 }

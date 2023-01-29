@@ -1,35 +1,27 @@
 ﻿using System;
 using System.Threading;
+namespace ETModel {
 
-namespace ETModel
-{
-	public class TryLock : IDisposable
-	{
-		private object locked;
+    public class TryLock : IDisposable {
+        private object locked;
 
-		public bool HasLock { get; private set; }
+        public bool HasLock { get; private set; }
 
-		public TryLock(object obj)
-		{
-			if (!Monitor.TryEnter(obj))
-			{
-				return;
-			}
+        public TryLock(object obj) {
+            if (!Monitor.TryEnter(obj)) {
+                return;
+            }
+            this.HasLock = true;
+            this.locked = obj;
+        }
 
-			this.HasLock = true;
-			this.locked = obj;
-		}
-
-		public void Dispose()
-		{
-			if (!this.HasLock)
-			{
-				return;
-			}
-
-			Monitor.Exit(this.locked);
-			this.locked = null;
-			this.HasLock = false;
-		}
-	}
+        public void Dispose() {
+            if (!this.HasLock) {
+                return;
+            }
+            Monitor.Exit(this.locked);
+            this.locked = null;
+            this.HasLock = false;
+        }
+    }
 }

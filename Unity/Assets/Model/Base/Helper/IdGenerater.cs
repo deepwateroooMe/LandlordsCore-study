@@ -1,21 +1,16 @@
-﻿namespace ETModel
-{
-	public static class IdGenerater
-	{
-		public static long AppId { private get; set; }
+﻿namespace ETModel {
+    public static class IdGenerater {
 
-		private static ushort value;
+        public static long AppId { private get; set; }
+        private static ushort value;
 
-		public static long GenerateId()
-		{
-			long time = TimeHelper.ClientNowSeconds();
+        public static long GenerateId() {
+            long time = TimeHelper.ClientNowSeconds();
+            return (AppId << 48) + (time << 16) + ++value;
+        }
 
-			return (AppId << 48) + (time << 16) + ++value;
-		}
-
-		public static int GetAppIdFromId(long id)
-		{
-			return (int)(id >> 48);
-		}
-	}
+        public static int GetAppIdFromId(long id) {
+            return (int)(id >> 48);
+        }
+    }
 }

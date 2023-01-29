@@ -8,8 +8,9 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <RootNamespace></RootNamespace>
-    <ProjectGuid>{1066F652-6A89-D1C4-9881-1A19DF7AB80E}</ProjectGuid>
+    <RootNamespace>
+    </RootNamespace>
+    <ProjectGuid>{350246F3-F094-675F-855B-FB9B18C2B23E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Unity.Hotfix</AssemblyName>
@@ -44,230 +45,234 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="UnityEngine">
-      <HintPath>C:\Program Files\Unity\Hub\Editor\2017.4.0f1\Editor\Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>L:\unity_Software\2017.4.0f1\Editor\Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEditor">
-      <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/Managed/UnityEditor.dll</HintPath>
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/Managed/UnityEditor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Hotfix\Base\Event\EventIdType.cs" />
-     <Compile Include="Assets\Hotfix\Base\Event\IEvent.cs" />
-     <Compile Include="Assets\Hotfix\Base\Helper\ArrayHelper.cs" />
-     <Compile Include="Assets\Hotfix\Base\Helper\AssetBundleHelper.cs" />
-     <Compile Include="Assets\Hotfix\Base\Helper\Dumper.cs" />
-     <Compile Include="Assets\Hotfix\Base\Helper\ExceptionHelper.cs" />
-     <Compile Include="Assets\Hotfix\Base\Helper\JsonHelper.cs" />
-     <Compile Include="Assets\Hotfix\Base\Log.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\Component.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\ComponentFactory.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\ComponentWithId.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\Entity.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\EntityType.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\EventSystem.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\IAwakeSystem.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\IChangeSystem.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\IComponentSerialize.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\IDestroySystem.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\ILateUpdateSystem.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\ILoadSystem.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\ISerializeToEntity.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\IStartSystem.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\IUpdateSystem.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\Object.cs" />
-     <Compile Include="Assets\Hotfix\Base\Object\ObjectPool.cs" />
-     <Compile Include="Assets\Hotfix\Entity\Config\UnitConfig.cs" />
-     <Compile Include="Assets\Hotfix\Entity\Game.cs" />
-     <Compile Include="Assets\Hotfix\Entity\Scene.cs" />
-     <Compile Include="Assets\Hotfix\Init.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Component\Gamer\GamerUIComponent.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Component\Gamer\HandCardsComponent.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Component\GamerComponent.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Component\SessionWrap\SessionOfflineComponent.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Entity\Gamer.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Event\LandlordsEventIdType.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Factory\GamerFactory.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_AuthorityGrabLandlord_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_AuthorityPlayCard_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_Gameover_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerDontPlay_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerEnterRoom_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerExitRoom_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerGrabLandlordSelect_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerMoneyLess_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerPlayCard_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerReady_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerReconnect_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GameStart_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_SetLandlord_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_SetMultiples_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_Trusteeship_NttHandler.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Helper\CardHelper.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\Object\LandlordsUIType.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsLobby\Component\LandlordsLobbyComponent.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsLobby\Factory\LandlordsLobbyFactory.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsLogin\Component\LandlordsLoginComponent.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsLogin\Event\InitSceneStart_CreateLandlordsLogin.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsLogin\Factory\LandlordsLoginFactory.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Component\LandlordsEndComponent.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Component\LandlordsInteractionComponent.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Component\LandlordsRoomComponent.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Event\CancelHandCardEvent.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Event\SelectHandCardEvent.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Factory\LandlordsEndFactory.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Factory\LandlordsInteractionFactory.cs" />
-     <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Factory\LandlordsRoomFactory.cs" />
-     <Compile Include="Assets\Hotfix\Module\Actor\IActorMessage.cs" />
-     <Compile Include="Assets\Hotfix\Module\ActorLocation\IActorLocationMessage.cs" />
-     <Compile Include="Assets\Hotfix\Module\Config\ACategory.cs" />
-     <Compile Include="Assets\Hotfix\Module\Config\ConfigComponent.cs" />
-     <Compile Include="Assets\Hotfix\Module\Config\ConfigHelper.cs" />
-     <Compile Include="Assets\Hotfix\Module\Config\IConfig.cs" />
-     <Compile Include="Assets\Hotfix\Module\Demo\Actor_CreateUnitsHandler.cs" />
-     <Compile Include="Assets\Hotfix\Module\Demo\Actor_TestHandler.cs" />
-     <Compile Include="Assets\Hotfix\Module\Demo\G2C_TestHotfixHandler.cs" />
-     <Compile Include="Assets\Hotfix\Module\Demo\M2C_PathfindingResultHandler.cs" />
-     <Compile Include="Assets\Hotfix\Module\Demo\OperaComponent.cs" />
-     <Compile Include="Assets\Hotfix\Module\Demo\TestHotfixSubscribMonoEvent_LogString.cs" />
-     <Compile Include="Assets\Hotfix\Module\Message\AMHandler.cs" />
-     <Compile Include="Assets\Hotfix\Module\Message\HotfixMessage.cs" />
-     <Compile Include="Assets\Hotfix\Module\Message\HotfixMessageDispatcher.cs" />
-     <Compile Include="Assets\Hotfix\Module\Message\HotfixOpcode.cs" />
-     <Compile Include="Assets\Hotfix\Module\Message\IMessage.cs" />
-     <Compile Include="Assets\Hotfix\Module\Message\IMHandler.cs" />
-     <Compile Include="Assets\Hotfix\Module\Message\MessageDispatherComponent.cs" />
-     <Compile Include="Assets\Hotfix\Module\Message\MessagePool.cs" />
-     <Compile Include="Assets\Hotfix\Module\Message\OpcodeTypeComponent.cs" />
-     <Compile Include="Assets\Hotfix\Module\Message\Session.cs" />
-     <Compile Include="Assets\Hotfix\Module\Message\SessionComponent.cs" />
-     <Compile Include="Assets\Hotfix\Module\UI\IUIFactory.cs" />
-     <Compile Include="Assets\Hotfix\Module\UI\UI.cs" />
-     <Compile Include="Assets\Hotfix\Module\UI\UIComponent.cs" />
-     <Compile Include="Assets\Hotfix\Module\UI\UIType.cs" />
-     <Compile Include="Assets\Hotfix\Properties\AssemblyInfo.cs" />
-     <Compile Include="Assets\Hotfix\UI\UILobby\Component\UILobbyComponent.cs" />
-     <Compile Include="Assets\Hotfix\UI\UILobby\Factory\UILobbyFactory.cs" />
-     <Compile Include="Assets\Hotfix\UI\UILogin\Component\UILoginComponent.cs" />
-     <Compile Include="Assets\Hotfix\UI\UILogin\Event\InitSceneStart_CreateLoginUI.cs" />
-     <Compile Include="Assets\Hotfix\UI\UILogin\Factory\UILoginFactory.cs" />
-     <None Include="Assets\Hotfix\Unity.Hotfix.asmdef" />
- <Reference Include="UnityEngine.UI">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.UI">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/GUISystem/Editor/UnityEditor.UI.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.Networking">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/Networking/UnityEngine.Networking.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Networking">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/Networking/Editor/UnityEditor.Networking.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.TestRunner">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/TestRunner/Editor/UnityEditor.TestRunner.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.TestRunner">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/TestRunner/UnityEngine.TestRunner.dll</HintPath>
- </Reference>
- <Reference Include="nunit.framework">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/TestRunner/net35/unity-custom/nunit.framework.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.Timeline">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/Timeline/RuntimeEditor/UnityEngine.Timeline.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Timeline">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/Timeline/Editor/UnityEditor.Timeline.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.TreeEditor">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/TreeEditor/Editor/UnityEditor.TreeEditor.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.UIAutomation">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UIAutomation/UnityEngine.UIAutomation.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.UIAutomation">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UIAutomation/Editor/UnityEditor.UIAutomation.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.GoogleAudioSpatializer">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnityGoogleAudioSpatializer/Editor/UnityEditor.GoogleAudioSpatializer.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.GoogleAudioSpatializer">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnityGoogleAudioSpatializer/RuntimeEditor/UnityEngine.GoogleAudioSpatializer.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.HoloLens">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnityHoloLens/Editor/UnityEditor.HoloLens.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.HoloLens">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnityHoloLens/RuntimeEditor/UnityEngine.HoloLens.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.SpatialTracking">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/Editor/UnityEditor.SpatialTracking.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.SpatialTracking">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/RuntimeEditor/UnityEngine.SpatialTracking.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.VR">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnityVR/Editor/UnityEditor.VR.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Graphs">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/Managed/UnityEditor.Graphs.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.WindowsStandalone.Extensions">
- <HintPath>C:/Program Files/Unity/Hub/Editor/2017.4.0f1/Editor/Data/PlaybackEngines/windowsstandalonesupport/UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
- </Reference>
- <Reference Include="ICSharpCode.SharpZipLib">
- <HintPath>H:/unityGamesExample/LandlordsCore/Unity/Assets/Plugins/ICSharpCode.SharpZipLib.dll</HintPath>
- </Reference>
- <Reference Include="Pathfinding.ClipperLib">
- <HintPath>H:/unityGamesExample/LandlordsCore/Unity/Assets/Plugins/AstarPathfindingProject/Clipper/Pathfinding.ClipperLib.dll</HintPath>
- </Reference>
- <Reference Include="Pathfinding.Ionic.Zip.Reduced">
- <HintPath>H:/unityGamesExample/LandlordsCore/Unity/Assets/Plugins/AstarPathfindingProject/DotNetZip/Pathfinding.Ionic.Zip.Reduced.dll</HintPath>
- </Reference>
- <Reference Include="Pathfinding.Poly2Tri">
- <HintPath>H:/unityGamesExample/LandlordsCore/Unity/Assets/Plugins/AstarPathfindingProject/Poly2Tri/Pathfinding.Poly2Tri.dll</HintPath>
- </Reference>
- <Reference Include="JetBrains.Rider.Unity.Editor.Plugin.Repacked">
- <HintPath>H:/unityGamesExample/LandlordsCore/Unity/Assets/Plugins/Editor/JetBrains/JetBrains.Rider.Unity.Editor.Plugin.Repacked.dll</HintPath>
- </Reference>
- <Reference Include="NPOI">
- <HintPath>H:/unityGamesExample/LandlordsCore/Unity/Assets/Plugins/Editor/npoi/NPOI.dll</HintPath>
- </Reference>
- <Reference Include="NPOI.OOXML">
- <HintPath>H:/unityGamesExample/LandlordsCore/Unity/Assets/Plugins/Editor/npoi/NPOI.OOXML.dll</HintPath>
- </Reference>
- <Reference Include="NPOI.OpenXml4Net">
- <HintPath>H:/unityGamesExample/LandlordsCore/Unity/Assets/Plugins/Editor/npoi/NPOI.OpenXml4Net.dll</HintPath>
- </Reference>
- <Reference Include="NPOI.OpenXmlFormats">
- <HintPath>H:/unityGamesExample/LandlordsCore/Unity/Assets/Plugins/Editor/npoi/NPOI.OpenXmlFormats.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.Advertisements">
- <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.ads@2.0.3/UnityEngine.Advertisements.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Advertisements">
- <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.ads@2.0.3/Editor/UnityEditor.Advertisements.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.Analytics">
- <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.analytics@2.0.13/UnityEngine.Analytics.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Analytics">
- <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.analytics@2.0.13/Editor/UnityEditor.Analytics.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.Purchasing">
- <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.purchasing@0.0.19/UnityEngine.Purchasing.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Purchasing">
- <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.purchasing@0.0.19/Editor/UnityEditor.Purchasing.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.StandardEvents">
- <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.standardevents@1.0.10/UnityEngine.StandardEvents.dll</HintPath>
- </Reference>
+    <Compile Include="Assets\Hotfix\Base\Event\EventIdType.cs" />
+    <Compile Include="Assets\Hotfix\Base\Event\IEvent.cs" />
+    <Compile Include="Assets\Hotfix\Base\Helper\ArrayHelper.cs" />
+    <Compile Include="Assets\Hotfix\Base\Helper\AssetBundleHelper.cs" />
+    <Compile Include="Assets\Hotfix\Base\Helper\Dumper.cs" />
+    <Compile Include="Assets\Hotfix\Base\Helper\ExceptionHelper.cs" />
+    <Compile Include="Assets\Hotfix\Base\Helper\JsonHelper.cs" />
+    <Compile Include="Assets\Hotfix\Base\Log.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\Component.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\ComponentFactory.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\ComponentWithId.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\Entity.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\EntityType.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\EventSystem.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\IAwakeSystem.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\IChangeSystem.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\IComponentSerialize.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\IDestroySystem.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\ILateUpdateSystem.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\ILoadSystem.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\ISerializeToEntity.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\IStartSystem.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\IUpdateSystem.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\Object.cs" />
+    <Compile Include="Assets\Hotfix\Base\Object\ObjectPool.cs" />
+    <Compile Include="Assets\Hotfix\Entity\Config\UnitConfig.cs" />
+    <Compile Include="Assets\Hotfix\Entity\Game.cs" />
+    <Compile Include="Assets\Hotfix\Entity\Scene.cs" />
+    <Compile Include="Assets\Hotfix\Init.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Component\Gamer\GamerUIComponent.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Component\Gamer\HandCardsComponent.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Component\GamerComponent.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Component\SessionWrap\SessionOfflineComponent.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Entity\Gamer.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Event\LandlordsEventIdType.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Factory\GamerFactory.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_AuthorityGrabLandlord_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_AuthorityPlayCard_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_Gameover_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerDontPlay_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerEnterRoom_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerExitRoom_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerGrabLandlordSelect_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerMoneyLess_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerPlayCard_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerReady_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GamerReconnect_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_GameStart_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_SetLandlord_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_SetMultiples_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Handler\Actor_Trusteeship_NttHandler.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Helper\CardHelper.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\Object\LandlordsUIType.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsLobby\Component\LandlordsLobbyComponent.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsLobby\Factory\LandlordsLobbyFactory.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsLogin\Component\LandlordsLoginComponent.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsLogin\Event\InitSceneStart_CreateLandlordsLogin.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsLogin\Factory\LandlordsLoginFactory.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Component\LandlordsEndComponent.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Component\LandlordsInteractionComponent.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Component\LandlordsRoomComponent.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Event\CancelHandCardEvent.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Event\SelectHandCardEvent.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Factory\LandlordsEndFactory.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Factory\LandlordsInteractionFactory.cs" />
+    <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Factory\LandlordsRoomFactory.cs" />
+    <Compile Include="Assets\Hotfix\Module\Actor\IActorMessage.cs" />
+    <Compile Include="Assets\Hotfix\Module\ActorLocation\IActorLocationMessage.cs" />
+    <Compile Include="Assets\Hotfix\Module\Config\ACategory.cs" />
+    <Compile Include="Assets\Hotfix\Module\Config\ConfigComponent.cs" />
+    <Compile Include="Assets\Hotfix\Module\Config\ConfigHelper.cs" />
+    <Compile Include="Assets\Hotfix\Module\Config\IConfig.cs" />
+    <Compile Include="Assets\Hotfix\Module\Demo\Actor_CreateUnitsHandler.cs" />
+    <Compile Include="Assets\Hotfix\Module\Demo\Actor_TestHandler.cs" />
+    <Compile Include="Assets\Hotfix\Module\Demo\G2C_TestHotfixHandler.cs" />
+    <Compile Include="Assets\Hotfix\Module\Demo\M2C_PathfindingResultHandler.cs" />
+    <Compile Include="Assets\Hotfix\Module\Demo\OperaComponent.cs" />
+    <Compile Include="Assets\Hotfix\Module\Demo\TestHotfixSubscribMonoEvent_LogString.cs" />
+    <Compile Include="Assets\Hotfix\Module\Message\AMHandler.cs" />
+    <Compile Include="Assets\Hotfix\Module\Message\HotfixMessage.cs" />
+    <Compile Include="Assets\Hotfix\Module\Message\HotfixMessageDispatcher.cs" />
+    <Compile Include="Assets\Hotfix\Module\Message\HotfixOpcode.cs" />
+    <Compile Include="Assets\Hotfix\Module\Message\IMessage.cs" />
+    <Compile Include="Assets\Hotfix\Module\Message\IMHandler.cs" />
+    <Compile Include="Assets\Hotfix\Module\Message\MessageDispatherComponent.cs" />
+    <Compile Include="Assets\Hotfix\Module\Message\MessagePool.cs" />
+    <Compile Include="Assets\Hotfix\Module\Message\OpcodeTypeComponent.cs" />
+    <Compile Include="Assets\Hotfix\Module\Message\Session.cs" />
+    <Compile Include="Assets\Hotfix\Module\Message\SessionComponent.cs" />
+    <Compile Include="Assets\Hotfix\Module\UI\IUIFactory.cs" />
+    <Compile Include="Assets\Hotfix\Module\UI\UI.cs" />
+    <Compile Include="Assets\Hotfix\Module\UI\UIComponent.cs" />
+    <Compile Include="Assets\Hotfix\Module\UI\UIType.cs" />
+    <Compile Include="Assets\Hotfix\Properties\AssemblyInfo.cs" />
+    <Compile Include="Assets\Hotfix\UI\UILobby\Component\UILobbyComponent.cs" />
+    <Compile Include="Assets\Hotfix\UI\UILobby\Factory\UILobbyFactory.cs" />
+    <Compile Include="Assets\Hotfix\UI\UILogin\Component\UILoginComponent.cs" />
+    <Compile Include="Assets\Hotfix\UI\UILogin\Event\InitSceneStart_CreateLoginUI.cs" />
+    <Compile Include="Assets\Hotfix\UI\UILogin\Factory\UILoginFactory.cs" />
+    <None Include="Assets\Hotfix\Unity.Hotfix.asmdef" />
+    <Reference Include="UnityEngine.UI">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.UI">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/GUISystem/Editor/UnityEditor.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Networking">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/Networking/UnityEngine.Networking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Networking">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/Networking/Editor/UnityEditor.Networking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.TestRunner">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/TestRunner/Editor/UnityEditor.TestRunner.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TestRunner">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/TestRunner/UnityEngine.TestRunner.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/TestRunner/net35/unity-custom/nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Timeline">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/Timeline/RuntimeEditor/UnityEngine.Timeline.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Timeline">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/Timeline/Editor/UnityEditor.Timeline.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.TreeEditor">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/TreeEditor/Editor/UnityEditor.TreeEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIAutomation">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UIAutomation/UnityEngine.UIAutomation.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.UIAutomation">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UIAutomation/Editor/UnityEditor.UIAutomation.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.GoogleAudioSpatializer">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnityGoogleAudioSpatializer/Editor/UnityEditor.GoogleAudioSpatializer.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.GoogleAudioSpatializer">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnityGoogleAudioSpatializer/RuntimeEditor/UnityEngine.GoogleAudioSpatializer.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.HoloLens">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnityHoloLens/Editor/UnityEditor.HoloLens.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.HoloLens">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnityHoloLens/RuntimeEditor/UnityEngine.HoloLens.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.SpatialTracking">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/Editor/UnityEditor.SpatialTracking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SpatialTracking">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/RuntimeEditor/UnityEngine.SpatialTracking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.VR">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/UnityExtensions/Unity/UnityVR/Editor/UnityEditor.VR.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Graphs">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/Managed/UnityEditor.Graphs.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.WindowsStandalone.Extensions">
+      <HintPath>L:/unity_Software/2017.4.0f1/Editor/Data/PlaybackEngines/windowsstandalonesupport/UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>F:/unityGamesExamples/LandlordsCore/Unity/Assets/Plugins/ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Pathfinding.ClipperLib">
+      <HintPath>F:/unityGamesExamples/LandlordsCore/Unity/Assets/Plugins/AstarPathfindingProject/Clipper/Pathfinding.ClipperLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Pathfinding.Ionic.Zip.Reduced">
+      <HintPath>F:/unityGamesExamples/LandlordsCore/Unity/Assets/Plugins/AstarPathfindingProject/DotNetZip/Pathfinding.Ionic.Zip.Reduced.dll</HintPath>
+    </Reference>
+    <Reference Include="Pathfinding.Poly2Tri">
+      <HintPath>F:/unityGamesExamples/LandlordsCore/Unity/Assets/Plugins/AstarPathfindingProject/Poly2Tri/Pathfinding.Poly2Tri.dll</HintPath>
+    </Reference>
+    <Reference Include="JetBrains.Rider.Unity.Editor.Plugin.Repacked">
+      <HintPath>F:/unityGamesExamples/LandlordsCore/Unity/Assets/Plugins/Editor/JetBrains/JetBrains.Rider.Unity.Editor.Plugin.Repacked.dll</HintPath>
+    </Reference>
+    <Reference Include="NPOI">
+      <HintPath>F:/unityGamesExamples/LandlordsCore/Unity/Assets/Plugins/Editor/npoi/NPOI.dll</HintPath>
+    </Reference>
+    <Reference Include="NPOI.OOXML">
+      <HintPath>F:/unityGamesExamples/LandlordsCore/Unity/Assets/Plugins/Editor/npoi/NPOI.OOXML.dll</HintPath>
+    </Reference>
+    <Reference Include="NPOI.OpenXml4Net">
+      <HintPath>F:/unityGamesExamples/LandlordsCore/Unity/Assets/Plugins/Editor/npoi/NPOI.OpenXml4Net.dll</HintPath>
+    </Reference>
+    <Reference Include="NPOI.OpenXmlFormats">
+      <HintPath>F:/unityGamesExamples/LandlordsCore/Unity/Assets/Plugins/Editor/npoi/NPOI.OpenXmlFormats.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Advertisements">
+      <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.ads@2.0.3/UnityEngine.Advertisements.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Advertisements">
+      <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.ads@2.0.3/Editor/UnityEditor.Advertisements.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Analytics">
+      <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.analytics@2.0.13/UnityEngine.Analytics.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Analytics">
+      <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.analytics@2.0.13/Editor/UnityEditor.Analytics.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Purchasing">
+      <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.purchasing@0.0.19/UnityEngine.Purchasing.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Purchasing">
+      <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.purchasing@0.0.19/Editor/UnityEditor.Purchasing.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.StandardEvents">
+      <HintPath>C:/ProgramData/Unity/cache/packages/packages.unity.com/com.unity.standardevents@1.0.10/UnityEngine.StandardEvents.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Unity.Model.csproj">
-      <Project>{B4BF9894-F5D9-41C4-13E3-3F26F7700E29}</Project>      <Name>Unity.Model</Name>    </ProjectReference>
+      <Project>{B4BF9894-F5D9-41C4-13E3-3F26F7700E29}</Project>
+      <Name>Unity.Model</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.ThirdParty.csproj">
-      <Project>{E15BADD2-3A26-309A-AB0F-DC5B08044350}</Project>      <Name>Unity.ThirdParty</Name>    </ProjectReference>
+      <Project>{E15BADD2-3A26-309A-AB0F-DC5B08044350}</Project>
+      <Name>Unity.ThirdParty</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -277,5 +282,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  
 </Project>
