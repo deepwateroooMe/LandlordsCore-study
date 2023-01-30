@@ -1,44 +1,36 @@
 ﻿using System;
 using System.Net;
+namespace ETModel {
 
-namespace ETModel
-{
-	public enum NetworkProtocol
-	{
-		KCP,
-		TCP,
-		WebSocket,
-	}
+    public enum NetworkProtocol {
+        KCP,
+        TCP,
+        WebSocket,
+    }
 
-	public abstract class AService: Component
-	{
-		public abstract AChannel GetChannel(long id);
+    public abstract class AService: Component {
 
-		private Action<AChannel> acceptCallback;
+        // 每个服务:只对应唯一一个通信信道吗 ?
+        public abstract AChannel GetChannel(long id);
 
-		public event Action<AChannel> AcceptCallback
-		{
-			add
-			{
-				this.acceptCallback += value;
-			}
-			remove
-			{
-				this.acceptCallback -= value;
-			}
-		}
-		
-		protected void OnAccept(AChannel channel)
-		{
-			this.acceptCallback.Invoke(channel);
-		}
+        private Action<AChannel> acceptCallback;
+        public event Action<AChannel> AcceptCallback { // 注册 与 取消 回调
+            add {
+                this.acceptCallback += value;
+            }
+            remove {
+                this.acceptCallback -= value;
+            }
+        }
+        
+        protected void OnAccept(AChannel channel) {
+            this.acceptCallback.Invoke(channel);
+        }
 
-		public abstract AChannel ConnectChannel(IPEndPoint ipEndPoint);
-		
-		public abstract AChannel ConnectChannel(string address);
+        public abstract AChannel ConnectChannel(IPEndPoint ipEndPoint);
+        public abstract AChannel ConnectChannel(string address);
 
-		public abstract void Remove(long channelId);
-
-		public abstract void Update();
-	}
+        public abstract void Remove(long channelId);
+        public abstract void Update();
+    }
 }

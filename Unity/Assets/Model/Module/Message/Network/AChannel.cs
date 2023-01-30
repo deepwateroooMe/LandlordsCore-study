@@ -1,95 +1,73 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+namespace ETModel {
 
-namespace ETModel
-{
-	public enum ChannelType
-	{
-		Connect,
-		Accept,
-	}
+ // 类型只有两种 方向:  或发送,或接收
+    public enum ChannelType {
+        Connect,
+        Accept,
+    }
 
-	public abstract class AChannel: ComponentWithId
-	{
-		public ChannelType ChannelType { get; }
+    public abstract class AChannel: ComponentWithId {
 
-		private AService service;
+        public ChannelType ChannelType { get; }
 
-		public AService Service
-		{
-			get
-			{
-				return this.service;
-			}
-		}
+        private AService service;
+        public AService Service {
+            get {
+                return this.service;
+            }
+        }
+        public abstract MemoryStream Stream { get; }
+        
+        public int Error { get; set; }
+        public IPEndPoint RemoteAddress { get; protected set; }
 
-		public abstract MemoryStream Stream { get; }
-		
-		public int Error { get; set; }
+        private Action<AChannel, int> errorCallback;
+        public event Action<AChannel, int> ErrorCallback {
+            add {
+                this.errorCallback += value;
+            }
+            remove {
+                this.errorCallback -= value;
+            }
+        }
+        
+        private Action<MemoryStream> readCallback;
+        public event Action<MemoryStream> ReadCallback {
+            add {
+                this.readCallback += value;
+            }
+            remove {
+                this.readCallback -= value;
+            }
+        }
+        
+        protected void OnRead(MemoryStream memoryStream) {
+            this.readCallback.Invoke(memoryStream);
+        }
+        protected void OnError(int e) { // 出错回调，大数情况下可能是把异步抛出来
+            this.Error = e;
+            this.errorCallback?.Invoke(this, e);
+        }
 
-		public IPEndPoint RemoteAddress { get; protected set; }
+        protected AChannel(AService service, ChannelType channelType) {
+            this.Id = IdGenerater.GenerateId();
+            this.ChannelType = channelType;
+            this.service = service;
+        }
 
-		private Action<AChannel, int> errorCallback;
-
-		public event Action<AChannel, int> ErrorCallback
-		{
-			add
-			{
-				this.errorCallback += value;
-			}
-			remove
-			{
-				this.errorCallback -= value;
-			}
-		}
-		
-		private Action<MemoryStream> readCallback;
-
-		public event Action<MemoryStream> ReadCallback
-		{
-			add
-			{
-				this.readCallback += value;
-			}
-			remove
-			{
-				this.readCallback -= value;
-			}
-		}
-		
-		protected void OnRead(MemoryStream memoryStream)
-		{
-			this.readCallback.Invoke(memoryStream);
-		}
-
-		protected void OnError(int e)
-		{
-			this.Error = e;
-			this.errorCallback?.Invoke(this, e);
-		}
-
-		protected AChannel(AService service, ChannelType channelType)
-		{
-			this.Id = IdGenerater.GenerateId();
-			this.ChannelType = channelType;
-			this.service = service;
-		}
-
-		public abstract void Start();
-		
-		public abstract void Send(MemoryStream stream);
-		
-		public override void Dispose()
-		{
-			if (this.IsDisposed)
-			{
-				return;
-			}
-
-			base.Dispose();
-
-			this.service.Remove(this.Id);
-		}
-	}
+        public abstract void Start();
+        
+        public abstract void Send(MemoryStream stream);
+        
+        public override void Dispose() {
+            if (this.IsDisposed) {
+                return;
+            }
+            base.Dispose();
+            this.service.Remove(this.Id);
+        }
+    }
 }

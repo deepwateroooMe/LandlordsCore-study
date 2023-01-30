@@ -43,7 +43,7 @@ namespace App
 				Game.Scene.AddComponent<OpcodeTypeComponent>();
 				Game.Scene.AddComponent<MessageDispatherComponent>();
 
-				// 根据不同的AppType添加不同的组件
+				// 根据不同的AppType添加不同的组件: 
 				OuterConfig outerConfig = startConfig.GetComponent<OuterConfig>();
 				InnerConfig innerConfig = startConfig.GetComponent<InnerConfig>();
 				ClientConfig clientConfig = startConfig.GetComponent<ClientConfig>();
@@ -55,9 +55,11 @@ namespace App
 						Game.Scene.AddComponent<NetInnerComponent, string>(innerConfig.Address);
 						Game.Scene.AddComponent<NetOuterComponent, string>(outerConfig.Address);
 						break;
-					case AppType.Realm:
+					case AppType.Realm: // 现在看到的，绝大多数的登录服都是用的这个
 						Game.Scene.AddComponent<ActorMessageDispatherComponent>();
+// 内网网络组件NetInnerComponent，处理对内网连接： 就是不同服务器之间（登录服，Gate服，Map服，Locatioin服等等）
 						Game.Scene.AddComponent<NetInnerComponent, string>(innerConfig.Address);
+// 外网网络组件NetOuterComponent，处理与客户端连接（与客户端有交互的，主要是登录服  与 Gate服，登录后就主要通过gate服中转了）
 						Game.Scene.AddComponent<NetOuterComponent, string>(outerConfig.Address);
 						Game.Scene.AddComponent<LocationProxyComponent>();
 						Game.Scene.AddComponent<RealmGateAddressComponent>();
