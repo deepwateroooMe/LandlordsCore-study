@@ -54,17 +54,17 @@ namespace ETHotfix {
             if (isLogining || this.IsDisposed) {
                 return;
             }
+ // 这里没找到： 游戏中哪里什么地方加载了这个对外网络组件  ？
             NetOuterComponent netOuterComponent = Game.Scene.ModelScene.GetComponent<NetOuterComponent>();
             // 设置登录中状态
             isLogining = true;
             Session sessionWrap = null;
- // 这里涉及到几个服务器：感觉几个服务器之间的返回连接过渡比较快，还有点儿没有看懂            
             try {
                 // 创建登录服务器连接
                 IPEndPoint connetEndPoint = NetworkHelper.ToIPEndPoint(GlobalConfigComponent.Instance.GlobalProto.Address);
                 ETModel.Session session = netOuterComponent.Create(connetEndPoint);
                 sessionWrap = ComponentFactory.Create<Session, ETModel.Session>(session);
-                sessionWrap.session.GetComponent<SessionCallbackComponent>().DisposeCallback += s =>  {
+                sessionWrap.session.GetComponent<SessionCallbackComponent>().DisposeCallback += s =>  { // 注册回调
                     if (Game.Scene.GetComponent<UIComponent>()?.Get(UIType.LandlordsLogin) != null) {
                         prompt.text = "断开连接";
                         isLogining = false;
@@ -72,7 +72,7 @@ namespace ETHotfix {
                 };
                 // 发送登录请求
                 prompt.text = "正在登录中....";
-                // 客户端发送帐号密码给login server验证，并且等待login响应消息返回，login会分配一个网关给客户端
+                // 客户端发送帐号密码给Realm注册登录服，login server验证，并且等待login响应消息返回，login会分配一个网关给客户端
                 R2C_Login_Ack r2C_Login_Ack = await sessionWrap.Call(new C2R_Login_Req() { Account = account.text, Password = password.text }) as R2C_Login_Ack;
                 prompt.text = "";
                 if (this.IsDisposed) {
@@ -94,11 +94,11 @@ namespace ETHotfix {
                 // 创建Gate服务器连接：客户端连接网关 ？？？
                 connetEndPoint = NetworkHelper.ToIPEndPoint(r2C_Login_Ack.Address); // 可是这里不明明写的是Realm 2 Client的吗？怎么是去Gate网关的呢？
                 ETModel.Session gateSession = netOuterComponent.Create(connetEndPoint);
-                Game.Scene.AddComponent<SessionComponent>().Session = ComponentFactory.Create<Session, ETModel.Session>(gateSession);
+                Game.Scene.AddComponent<SessionComponent>().Session = ComponentFactory.Create<Session, ETModel.Session>(gateSession); // 重新工厂实例化一个去网关服的会话消息
                 // SessionWeap添加连接断开组件，用于处理客户端连接断开
                 Game.Scene.GetComponent<SessionComponent>().Session.AddComponent<SessionOfflineComponent>();
-                Game.Scene.ModelScene.AddComponent<ETModel.SessionComponent>().Session = gateSession;
-                // 登录Gate服务器
+                Game.Scene.ModelScene.AddComponent<ETModel.SessionComponent>().Session = gateSession; // 这个会话存放的地方，好像稍有不同 
+                // 登录Gate服务器：这里跟我查找的理论图稍有不同，它说先从注册登录服返回，可以拿到一个Key,再用这个Key去连网关gate服
                 G2C_LoginGate_Ack g2C_LoginGate_Ack = await SessionComponent.Instance.Session.Call(new C2G_LoginGate_Req() { Key = r2C_Login_Ack.Key }) as G2C_LoginGate_Ack;
                 if (g2C_LoginGate_Ack.Error == ErrorCode.ERR_ConnectGateKeyError) {
                     prompt.text = "连接网关服务器超时";
@@ -112,7 +112,8 @@ namespace ETHotfix {
                 }
                 Log.Info("登录成功");
                 // 保存本地玩家
-                User user = ETModel.ComponentFactory.CreateWithId<User, long>(g2C_LoginGate_Ack.PlayerID, g2C_LoginGate_Ack.UserID);
+                User user = ETModel.ComponentFactory.CreateWithId<User, long>(g2C_LoginGate_Ack.PlayerID, g2C_LoginGate_Ack.UserID); // 拿到PlayerID UserID
+// 斗地主客户端的第一个自定义组件ClientComponent 定义了静态唯一实例Instance和User成员LocalPlayer, 在登陆成功后设置改实例为当前玩家                
                 ClientComponent.Instance.LocalPlayer = user;
                 // 跳转到大厅界面
                 Game.Scene.GetComponent<UIComponent>().Create(UIType.LandlordsLobby);
@@ -127,8 +128,7 @@ namespace ETHotfix {
                 isLogining = false;
             }
         }
-        // 注册按钮事件
-        public async void OnRegister() {
+        public async void OnRegister() { // 注册按钮事件
             if (isRegistering || this.IsDisposed) {
                 return;
             }
@@ -143,6 +143,7 @@ namespace ETHotfix {
                 sessionWrap = ComponentFactory.Create<Session, ETModel.Session>(session);
                 // 发送注册请求
                 prompt.text = "正在注册中....";
+                 // 调用的时候是， Client 2 Realm注册登录服，返回的是 Realm 2 Client  IResponse 转化为R2C_Register_Ack协议
                 R2C_Register_Ack r2C_Register_Ack = await sessionWrap.Call(new C2R_Register_Req() { Account = account.text, Password = password.text }) as R2C_Register_Ack;
                 prompt.text = "";
                 if (this.IsDisposed) {
@@ -162,7 +163,7 @@ namespace ETHotfix {
                 Log.Error(e.ToStr());
             }
             finally {
-                // 断开验证服务器的连接
+                // 断开验证服务器的连接: 这里说这个客户端，以后就是与网关服Gate往返消息，与注册登录服Realm这里连接就断开了。网关服大概主要就转消息
                 sessionWrap?.Dispose();
                 // 设置注册处理完成状态
                 isRegistering = false;
