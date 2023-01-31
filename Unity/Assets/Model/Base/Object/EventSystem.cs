@@ -14,7 +14,7 @@ namespace ETModel {
         private readonly Dictionary<long, Component> allComponents = new Dictionary<long, Component>();
         private readonly Dictionary<DLLType, Assembly> assemblies = new Dictionary<DLLType, Assembly>();
 
-        private readonly UnOrderMultiMap<Type, Type> types = new UnOrderMultiMap<Type, Type>();
+        private readonly UnOrderMultiMap<Type, Type> types = new UnOrderMultiMap<Type, Type>(); // 这个是收集到的最多的类型
         private readonly Dictionary<string, List<IEvent>> allEvents = new Dictionary<string, List<IEvent>>();
         
 // 某个特定的回调事件系统：Awake() Start() Destroy() Load() Update() LateUpdate() Change()?
@@ -48,7 +48,7 @@ namespace ETModel {
                     this.types.Add(baseAttribute.AttributeType, type);
                 }
             }
-// 程序集里: 关于这些这类标签的事件回调的统一管理注册等
+// 程序集里: 关于这些这类标签的事件回调的统一管理注册等  ObjectSystemAttribute
 // 某个特定的回调事件系统：Awake() Start() Destroy() Load() Update() LateUpdate() Change()?
             this.awakeSystems.Clear();
             this.lateUpdateSystems.Clear();
@@ -92,7 +92,7 @@ namespace ETModel {
                     this.changeSystems.Add(changeSystem.Type(), changeSystem);
                 }
             }
- // EventAttribute: 
+ // EventAttribute:  属性标签相关的
             this.allEvents.Clear();
             foreach (Type type in types[typeof(EventAttribute)]) {
                 object[] attrs = type.GetCustomAttributes(typeof(EventAttribute), false);
@@ -110,6 +110,7 @@ namespace ETModel {
             this.Load();
         }
 
+ // 事件的注册  添加  与  移除  等等         
         public void RegisterEvent(string eventId, IEvent e) {
             if (!this.allEvents.ContainsKey(eventId)) {
                 this.allEvents.Add(eventId, new List<IEvent>());
@@ -151,7 +152,7 @@ namespace ETModel {
             return component;
         }
         
- // Awake(): 因为这个回调的特殊性，第一次加载的时候就会自动调用运行触发唯一一次回调
+ // Awake()等： 几大事件系统的回调定义
         public void Awake(Component component) {
             List<IAwakeSystem> iAwakeSystems = this.awakeSystems[component.GetType()];
             if (iAwakeSystems == null) {
@@ -161,13 +162,12 @@ namespace ETModel {
                 if (aAwakeSystem == null) {
                     continue;
                 }
-                
                 IAwake iAwake = aAwakeSystem as IAwake;
                 if (iAwake == null) {
                     continue;
                 }
                 try {
-                    iAwake.Run(component); // <<<<<<<<<<<<<<<<<<<< 这里已经运行了，在第一次加载的时候  ？
+                    iAwake.Run(component); // <<<<<<<<<<<<<<<<<<<< 这里已经运行了，在第一次加载的时候，这里找出来的调用时间不对，应该再去找再早一点儿的地方 
                 }
                 catch (Exception e) {
                     Log.Error(e);
@@ -239,7 +239,6 @@ namespace ETModel {
                 }
             }
         }
-
         public void Change(Component component) {
             List<IChangeSystem> iChangeSystems = this.changeSystems[component.GetType()];
             if (iChangeSystems == null) {
@@ -385,8 +384,7 @@ namespace ETModel {
             }
             ObjectHelper.Swap(ref this.lateUpdates, ref this.lateUpdates2);
         }
-        
- // Run(): 什么时候调用的  ？
+ // Run():  几个不同参数的运行函数定义，适配unity 生命周期回调函数的调用，一  二  三  个参数等
         public void Run(string type) {
             List<IEvent> iEvents;
             if (!this.allEvents.TryGetValue(type, out iEvents)) {

@@ -1,27 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+namespace ETModel {
 
-namespace ETModel
-{
-	/// <summary>
-	/// Actor消息分发组件
-	/// </summary>
-	public class ActorMessageDispatherComponent : Component
-	{
-		public readonly Dictionary<string, IActorInterceptTypeHandler> ActorTypeHandlers = new Dictionary<string, IActorInterceptTypeHandler>();
+    // Actor消息分发组件
+    public class ActorMessageDispatherComponent : Component {
 
-		public readonly Dictionary<Type, IMActorHandler> ActorMessageHandlers = new Dictionary<Type, IMActorHandler>();
+        public readonly Dictionary<string, IActorInterceptTypeHandler> ActorTypeHandlers = new Dictionary<string, IActorInterceptTypeHandler>();
 
-		public override void Dispose()
-		{
-			if (this.IsDisposed)
-			{
-				return;
-			}
-			base.Dispose();
+        public readonly Dictionary<Type, IMActorHandler> ActorMessageHandlers = new Dictionary<Type, IMActorHandler>();
 
-			this.ActorMessageHandlers.Clear();
-			this.ActorTypeHandlers.Clear();
-		}
-	}
+        public override void Dispose() {
+            if (this.IsDisposed) {
+                return;
+            }
+            base.Dispose();
+            this.ActorMessageHandlers.Clear();
+            this.ActorTypeHandlers.Clear();
+        }
+    }
 }

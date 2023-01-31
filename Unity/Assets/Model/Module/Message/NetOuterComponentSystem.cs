@@ -1,13 +1,14 @@
 ﻿using ETModel;
 namespace ETHotfix {
 
- // Awake() Awake1() Load() Update()    
+// Awake() Awake1() Load() Update()
+// Awake?() Load(): 会实例化消息分发器
     [ObjectSystem]
     public class NetOuterComponentAwakeSystem : AwakeSystem<NetOuterComponent> {
         public override void Awake(NetOuterComponent self) {
             self.Awake(self.Protocol);
             self.MessagePacker = new ProtobufPacker();
-            self.MessageDispatcher = new OuterMessageDispatcher();
+            self.MessageDispatcher = new OuterMessageDispatcher(); // <<<<<<<<<< 
         }
     }
     [ObjectSystem]
@@ -15,15 +16,14 @@ namespace ETHotfix {
         public override void Awake(NetOuterComponent self, string address) {
             self.Awake(self.Protocol, address);
             self.MessagePacker = new ProtobufPacker();
-            self.MessageDispatcher = new OuterMessageDispatcher();
+            self.MessageDispatcher = new OuterMessageDispatcher(); // <<<<<<<<<< 
         }
     }
-    
     [ObjectSystem]
     public class NetOuterComponentLoadSystem : LoadSystem<NetOuterComponent> {
         public override void Load(NetOuterComponent self) {
             self.MessagePacker = new ProtobufPacker();
-            self.MessageDispatcher = new OuterMessageDispatcher();
+            self.MessageDispatcher = new OuterMessageDispatcher(); // <<<<<<<<<< 
         }
     }
     
