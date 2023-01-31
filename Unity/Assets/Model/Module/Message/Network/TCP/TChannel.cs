@@ -239,7 +239,7 @@ namespace ETModel {
             }
             this.isSending = true;
             int sendSize = this.sendBuffer.ChunkSize - this.sendBuffer.FirstIndex;
-            if (sendSize > this.sendBuffer.Length) {
+            if (sendSize > this.sendBuffer.Length) { // 狠怪异：什么情况下会走到这个分支来呢？
                 sendSize = (int)this.sendBuffer.Length;
             }
             this.SendAsync(this.sendBuffer.First, this.sendBuffer.FirstIndex, sendSize);
@@ -269,8 +269,8 @@ namespace ETModel {
                 this.OnError(ErrorCode.ERR_PeerDisconnect);
                 return;
             }
-            this.sendBuffer.FirstIndex += e.BytesTransferred;
-            if (this.sendBuffer.FirstIndex == this.sendBuffer.ChunkSize) {
+            this.sendBuffer.FirstIndex += e.BytesTransferred; // 更新到真正需要起始发送的地方
+            if (this.sendBuffer.FirstIndex == this.sendBuffer.ChunkSize) { // 如果当前块读完了，把这个块移走回收，从下一个块开始读，更新读下标
                 this.sendBuffer.FirstIndex = 0;
                 this.sendBuffer.RemoveFirst();
             }

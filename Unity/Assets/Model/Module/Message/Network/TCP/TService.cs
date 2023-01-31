@@ -19,7 +19,7 @@ namespace ETModel {
         // 即可做client也可做server
         public TService(int packetSizeLength, IPEndPoint ipEndPoint, Action<AChannel> acceptCallback) {
             this.PacketSizeLength = packetSizeLength;
-            this.AcceptCallback += acceptCallback;
+            this.AcceptCallback += acceptCallback; // <<<<<<<<<<<<<<<<<<<< 接收回调是从这里注册的
             
             this.acceptor = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.acceptor.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
@@ -27,7 +27,7 @@ namespace ETModel {
             
             this.acceptor.Bind(ipEndPoint);
             this.acceptor.Listen(1000);
-            this.AcceptAsync();
+            this.AcceptAsync(); // 这里的异步接受：一个服务器可以连10000个客户端，所以当它异步接收连接好一个客户端，它会无限循环，试图去连10000个客户端。。。。。
         }
         public TService(int packetSizeLength) {
             this.PacketSizeLength = packetSizeLength;
@@ -57,12 +57,12 @@ namespace ETModel {
                 throw new Exception($"socket accept error: {e.LastOperation}");
             }
         }
-        public void AcceptAsync() {
+        public void AcceptAsync() { // <<<<<<<<<<<<<<<<<<<< 
             this.innArgs.AcceptSocket = null;
             if (this.acceptor.AcceptAsync(this.innArgs)) {
                 return;
             }
-            OnAcceptComplete(this.innArgs);
+            OnAcceptComplete(this.innArgs); // <<<<<<<<<<<<<<<<<<<< 
         }
         private void OnAcceptComplete(object o) {
             if (this.acceptor == null) {
@@ -72,13 +72,13 @@ namespace ETModel {
             
             if (e.SocketError != SocketError.Success) {
                 Log.Error($"accept error {e.SocketError}");
-                this.AcceptAsync();
+                this.AcceptAsync(); // 这里说，如果出错了，重新开始异步接收，就是重试，默认重试多少次  ？＞
                 return;
             }
             TChannel channel = new TChannel(e.AcceptSocket, this);
             this.idChannels[channel.Id] = channel;
             try {
-                this.OnAccept(channel);
+                this.OnAccept(channel); // <<<<<<<<<<<<<<<<<<<< 每接收到一个块儿，就触发回调处理：这里是调用注册过的回调，可是细节呢？
             }
             catch (Exception exception) {
                 Log.Error(exception);
@@ -87,7 +87,7 @@ namespace ETModel {
                 return;
             }
             
-            this.AcceptAsync();
+            this.AcceptAsync(); // <<<<<<<<<<<<<<<<<<<< 这里就可以看见这种循环异步接收：一个服务器一次只能同一个客户端连？连好了就随时准备接收另一个客户端
         }
         
         public override AChannel GetChannel(long id) {

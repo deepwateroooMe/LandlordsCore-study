@@ -34,7 +34,7 @@ namespace ETModel {
             }
         }
         
-        private Action<MemoryStream> readCallback;
+        private Action<MemoryStream> readCallback; // 内存流的可读回调，（有可读的内存流就会自动触发回调）
         public event Action<MemoryStream> ReadCallback {
             add {
                 this.readCallback += value;

@@ -1,22 +1,18 @@
 ﻿using System;
 using System.IO;
 
-namespace ETModel
-{
-	public class SessionCallbackComponent: Component
-	{
-		public Action<Session, byte, ushort, MemoryStream> MessageCallback;
-		public Action<Session> DisposeCallback;
+namespace ETModel {
+    public class SessionCallbackComponent: Component {
 
-		public override void Dispose()
-		{
-			if (this.IsDisposed)
-			{
-				return;
-			}
-			base.Dispose();
+        public Action<Session, byte, ushort, MemoryStream> MessageCallback;
+        public Action<Session> DisposeCallback;
 
-			this.DisposeCallback?.Invoke(this.GetParent<Session>());
-		}
-	}
+        public override void Dispose() {
+            if (this.IsDisposed) {
+                return;
+            }
+            base.Dispose();
+            this.DisposeCallback?.Invoke(this.GetParent<Session>());
+        }
+    }
 }

@@ -4,6 +4,9 @@ using System.Linq;
 using System.Net;
 
 namespace ETModel {
+
+    // 这个类是双端共享源码的类：双端都可以用,但某此成员可能只是提供给某一端来使用的，比如客户端的消息打包器与消息转发器
+    // 抽象了udp和tcp协议的连接工厂，用于创建channel使用tcp做服端的时候可以创建多个Session，每个Session都是一个连接的高层抽象。
     public abstract class NetworkComponent : Component {
 
         public AppType AppType;
@@ -12,6 +15,8 @@ namespace ETModel {
         // 这个组件管理不上一个session, 所以要管理一下
         private readonly Dictionary<long, Session> sessions = new Dictionary<long, Session>();
 
+        // 这个类是双端共享源码的类：双端都可以用,但某此成员可能只是提供给某一端来使用的，比如客户端的消息打包器与消息转发器
+        // 其提供的MessageDispatch和MessagePacker仅在客户端项目使用。一个是客户端消息转发器，一个是客户端消息打包器。
         public IMessagePacker MessagePacker { get; set; }
         public IMessageDispatcher MessageDispatcher { get; set; }
 
@@ -39,7 +44,7 @@ namespace ETModel {
                     break;
                 case NetworkProtocol.TCP:
                     ipEndPoint = NetworkHelper.ToIPEndPoint(address);
-                    this.Service = new TService(packetSize, ipEndPoint, this.OnAccept);
+                    this.Service = new TService(packetSize, ipEndPoint, this.OnAccept); // <<<<<<<<<<<<<<<<<<<< 这里就注册了这个异步接收到数据的回调
                     break;
                 case NetworkProtocol.WebSocket:
                     string[] prefixs = address.Split(';');
@@ -60,7 +65,7 @@ namespace ETModel {
             this.sessions.Add(session.Id, session); // Component组件是带id的
             session.Start(); // 这里应该是一个异步开始接收连接的方法
         }
-        public virtual void Remove(long id) { // 移除掉某个过期,或是用户登出去了的session
+        public virtual void Remove(long id) { // 移除掉某个过期,或是用户登出去了的,  或是出错了的  session
             Session session;
             if (!this.sessions.TryGetValue(id, out session)) {
                 return;
