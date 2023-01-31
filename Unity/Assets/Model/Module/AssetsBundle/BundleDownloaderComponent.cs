@@ -66,7 +66,7 @@ namespace ETModel {
             } else {
                 directoryInfo.Create();
             }
-            // 对比MD5
+            // 应用本地的，也存在于服务器的文件：对比双端MD5，服务器文件信息存有其MD5码
             foreach (FileVersionInfo fileVersionInfo in remoteVersionConfig.FileInfoDict.Values) {
                 // 对比md5
                 string localFileMD5 = BundleHelper.GetBundleMD5(streamingVersionConfig, fileVersionInfo.File);
@@ -74,7 +74,7 @@ namespace ETModel {
                     continue;
                 }
  // 本地落后：与服务器的版本号不同的，就缓存标识到队列里，呆会儿就可以从服务器下载同步最近的到本地了                
-                this.bundles.Enqueue(fileVersionInfo.File);
+                this.bundles.Enqueue(fileVersionInfo.File); // 这里没有看懂： 这个方法说是开始异步，但它只是这里更新了需要待下载的资源包链表，并不曾真正开始异步下载
                 this.TotalSize += fileVersionInfo.Size;
             }
         }

@@ -9,7 +9,8 @@ using UnityEngine;
 using UnityEditor;
 #endif
 namespace ETModel {
-    public class ABInfo : Component {
+
+    public class ABInfo : Component { // AssetBundleInfo: 我觉得资源包的部分,自己项目中也用到,先去看自己不是狠懂的地方,这里可以先跳过
         private int refCount;
         public string Name { get; }
         public int RefCount {
@@ -22,12 +23,14 @@ namespace ETModel {
             }
         }
         public AssetBundle AssetBundle { get; }
+
         public ABInfo(string name, AssetBundle ab) {
             this.Name = name;
             this.AssetBundle = ab;
             this.RefCount = 1;
             // Log.Debug($"load assetbundle: {this.Name}");
         }
+
         public override void Dispose() {
             if (this.IsDisposed) {
                 return;
@@ -41,9 +44,9 @@ namespace ETModel {
     // 用于字符串转换，减少GC
     public static class AssetBundleHelper {
         public static readonly Dictionary<int, string> IntToStringDict = new Dictionary<int, string>();
-        
         public static readonly Dictionary<string, string> StringToABDict = new Dictionary<string, string>();
-        public static readonly Dictionary<string, string> BundleNameToLowerDict = new Dictionary<string, string>()  { { "StreamingAssets", "StreamingAssets" }
+        public static readonly Dictionary<string, string> BundleNameToLowerDict = new Dictionary<string, string>()  { 
+            { "StreamingAssets", "StreamingAssets" }
         };
         
         // 缓存包依赖，不用每次计算
