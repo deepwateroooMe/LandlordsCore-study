@@ -23,7 +23,7 @@ namespace ETModel {
 
         public void GotoHotfix() {
 #if ILRuntime
-            ILHelper.InitILRuntime(this.appDomain);
+            ILHelper.InitILRuntime(this.appDomain); // 这个方法里作：ILRuntime热更新的必要的加载
 #endif
             this.start.Run();
         }

@@ -15,7 +15,6 @@ namespace ETHotfix {
                     Log.Error("mono层是ILRuntime模式, Hotfix层是mono模式");
                 }
 #endif
-                
                 Game.Scene.ModelScene = ETModel.Game.Scene;
                 // 注册热更层回调
                 ETModel.Game.Hotfix.Update = () => { Update(); };
@@ -34,7 +33,7 @@ namespace ETHotfix {
                 // Game.EventSystem.Run(EventIdType.InitSceneStart);
                 Game.EventSystem.Run(EventIdType.LandlordsInitSceneStart); // 这个特定事件是怎么运行的？
             }
-            catch (Exception e) {
+            catch (Exception e) { 
                 Log.Error(e);
             }
         }
