@@ -3,59 +3,48 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
+namespace ETModel {
 
-namespace ETModel
-{
-	[ObjectSystem]
-	public class DbQueryBatchTaskSystem : AwakeSystem<DBQueryBatchTask, List<long>, string, TaskCompletionSource<List<ComponentWithId>>>
-	{
-		public override void Awake(DBQueryBatchTask self, List<long> idList, string collectionName, TaskCompletionSource<List<ComponentWithId>> tcs)
-		{
-			self.IdList = idList;
-			self.CollectionName = collectionName;
-			self.Tcs = tcs;
-		}
-	}
+    [ObjectSystem]
+    public class DbQueryBatchTaskSystem : AwakeSystem<DBQueryBatchTask, List<long>, string, TaskCompletionSource<List<ComponentWithId>>> {
 
-	public sealed class DBQueryBatchTask : DBTask
-	{
-		public string CollectionName { get; set; }
+        public override void Awake(DBQueryBatchTask self, List<long> idList, string collectionName, TaskCompletionSource<List<ComponentWithId>> tcs) {
+            self.IdList = idList; // Ids: 是作为参数传入这个组件的
+            self.CollectionName = collectionName; //  数据库表的名字
+            self.Tcs = tcs;
+        }
+    }
 
-		public List<long> IdList { get; set; }
+    public sealed class DBQueryBatchTask : DBTask {
 
-		public TaskCompletionSource<List<ComponentWithId>> Tcs { get; set; }
-		
-		public override async Task Run()
-		{
-			DBCacheComponent dbCacheComponent = Game.Scene.GetComponent<DBCacheComponent>();
-			DBComponent dbComponent = Game.Scene.GetComponent<DBComponent>();
-			List<ComponentWithId> result = new List<ComponentWithId>();
+        public string CollectionName { get; set; }
+        public List<long> IdList { get; set; }
+        public TaskCompletionSource<List<ComponentWithId>> Tcs { get; set; }
+        
+        public override async Task Run() {
 
-			try
-			{
-				// 执行查询数据库任务
-				foreach (long id in IdList)
-				{
-					ComponentWithId component = dbCacheComponent.GetFromCache(this.CollectionName, id);
-					if (component == null)
-					{
-						IAsyncCursor<ComponentWithId> cursor = await dbComponent.GetCollection(this.CollectionName).FindAsync((s) => s.Id == id);
-						component = await cursor.FirstOrDefaultAsync();
-					}
-					
-					if (component == null)
-					{
-						continue;
-					}
-					result.Add(component);
-				}
-				
-				this.Tcs.SetResult(result);
-			}
-			catch (Exception e)
-			{
-				this.Tcs.SetException(new Exception($"查询数据库异常! {this.CollectionName} {IdList.ListToString()}", e));
-			}
-		}
-	}
+            DBCacheComponent dbCacheComponent = Game.Scene.GetComponent<DBCacheComponent>();
+            DBComponent dbComponent = Game.Scene.GetComponent<DBComponent>();
+            List<ComponentWithId> result = new List<ComponentWithId>();
+
+            try {
+                // 执行查询数据库任务
+                foreach (long id in IdList) {
+                    ComponentWithId component = dbCacheComponent.GetFromCache(this.CollectionName, id);
+                    if (component == null) {
+                        IAsyncCursor<ComponentWithId> cursor = await dbComponent.GetCollection(this.CollectionName).FindAsync((s) => s.Id == id); // 异步查找
+                        component = await cursor.FirstOrDefaultAsync(); // 从上面的返回类型里再拿拿。。。
+                    }
+                    if (component == null) {
+                        continue;
+                    }
+                    result.Add(component);
+                }
+                this.Tcs.SetResult(result);
+            }
+            catch (Exception e) {
+                this.Tcs.SetException(new Exception($"查询数据库异常! {this.CollectionName} {IdList.ListToString()}", e));
+            }
+        }
+    }
 }

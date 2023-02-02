@@ -32,7 +32,7 @@ namespace ETModel {
 
         // Rpc调用回调的字典管理：值是Rpc回调回IResponse后的回调函数
         private readonly Dictionary<int, Action<IResponse>> requestCallback = new Dictionary<int, Action<IResponse>>();
-        private readonly List<byte[]> byteses = new List<byte[]>() { new byte[1], new byte[2] };
+        private readonly List<byte[]> byteses = new List<byte[]>() { new byte[1], new byte[2] }; // byteses应该就是通道中传输的数据了。
 
         public NetworkComponent Network {
             get {
@@ -107,6 +107,9 @@ namespace ETModel {
         private void Run(MemoryStream memoryStream) { 
             memoryStream.Seek(Packet.MessageIndex, SeekOrigin.Begin); // 它说，快进指到消息体的那个地方，下标索引
             byte flag = memoryStream.GetBuffer()[Packet.FlagIndex];
+
+            // BitConverter.ToUInt16 这个方法是将字节数组指定位置起的两个字节转换为无符号整数。所以我们得先保证messageBytes的长度是大于等于3的。
+            // 这里消息传递的结构：2个字节的操作类型+具体消息。
             ushort opcode = BitConverter.ToUInt16(memoryStream.GetBuffer(), Packet.OpcodeIndex);
             
 #if !SERVER

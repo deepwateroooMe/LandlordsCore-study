@@ -62,7 +62,7 @@ namespace ETModel {
             if (componentWithId != null) {
                 componentWithId.Id = component.InstanceId;
             }
-            Game.EventSystem.Awake(component);
+            Game.EventSystem.Awake(component); // 添加组件，是会自动Awake()的 
             return component;
         }
         public static T Create<T, A>(A a) where T : Component {

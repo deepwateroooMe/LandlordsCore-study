@@ -3,7 +3,7 @@ using ICSharpCode.SharpZipLib.Zip.Compression;
 
 namespace ETModel {
     public static class ZipHelper {
- // 压缩 与 解压
+ // 压缩 与 解压: 能够找到这个工具类，却没能找到具体用到它的地方，可能项目中RPC并不曾真正压缩与解压  ？
         public static byte[] Compress(byte[] content) {
             // return content;
             Deflater compressor = new Deflater();
@@ -36,6 +36,7 @@ namespace ETModel {
                 return bos.ToArray();
             }
         }
+        
     }
 }
 /*

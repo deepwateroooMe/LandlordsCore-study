@@ -1,35 +1,29 @@
 ﻿using MongoDB.Driver;
+namespace ETModel {
 
-namespace ETModel
-{
-	[ObjectSystem]
-	public class DbComponentSystem : AwakeSystem<DBComponent>
-	{
-		public override void Awake(DBComponent self)
-		{
-			self.Awake();
-		}
-	}
+ // 这个，应该主要是在服务器端，有个专门的数据库服务器吗？ 是的   
+    [ObjectSystem]
+    public class DbComponentSystem : AwakeSystem<DBComponent> {
+        public override void Awake(DBComponent self) {
+            self.Awake();
+        }
+    }
 
-	/// <summary>
-	/// 连接mongodb
-	/// </summary>
-	public class DBComponent : Component
-	{
-		public MongoClient mongoClient;
-		public IMongoDatabase database;
+// 连接mongodb
+    public class DBComponent : Component {
 
-		public void Awake()
-		{
+        public MongoClient mongoClient;
+        public IMongoDatabase database;
+
+        public void Awake() {
             DBConfig config = Game.Scene.GetComponent<StartConfigComponent>().StartConfig.GetComponent<DBConfig>();
             string connectionString = config.ConnectionString;
             mongoClient = new MongoClient(connectionString);
-            this.database = this.mongoClient.GetDatabase(config.DBName);
+            this.database = this.mongoClient.GetDatabase(config.DBName); // 这里拿到的就是，项目配置文件中配置过的MongoDB的数据库MeMeMe
         }
 
-		public IMongoCollection<ComponentWithId> GetCollection(string name)
-		{
-			return this.database.GetCollection<ComponentWithId>(name);
-		}
-	}
+        public IMongoCollection<ComponentWithId> GetCollection(string name) {
+            return this.database.GetCollection<ComponentWithId>(name);
+        }
+    }
 }

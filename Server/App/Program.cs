@@ -74,14 +74,14 @@ namespace App {
                     Game.Scene.AddComponent<ActorMessageDispatherComponent>();
                     Game.Scene.AddComponent<PathfindingComponent>();
                     break;
-                case AppType.AllServer:
+                case AppType.AllServer: // <<<<<<<<<<<<<<<<<<<< 我先重点就看这个，好像还是由8个项目构成的
                     Game.Scene.AddComponent<ActorMessageSenderComponent>();
                     Game.Scene.AddComponent<ActorLocationSenderComponent>();
                     Game.Scene.AddComponent<PlayerComponent>();
                     Game.Scene.AddComponent<UnitComponent>();
                     // PS：如果启动闪退有可能是服务器配置文件没有填数据库配置，请正确填写
                     // 这里需要将DBComponent的Awake注释去掉才能连接MongoDB
-                    Game.Scene.AddComponent<DBComponent>();
+                    Game.Scene.AddComponent<DBComponent>(); // 这个，就成为服务器端的一个重点，但是是最简单的重点，因为相比其它，它最容易
                     // 这里需要加上DBCacheComponent才能操作MongoDB
                     Game.Scene.AddComponent<DBCacheComponent>();
                     Game.Scene.AddComponent<DBProxyComponent>();
@@ -91,7 +91,7 @@ namespace App {
                     Game.Scene.AddComponent<NetOuterComponent, string>(outerConfig.Address);
                     Game.Scene.AddComponent<LocationProxyComponent>();
                     Game.Scene.AddComponent<AppManagerComponent>();
-                    Game.Scene.AddComponent<RealmGateAddressComponent>();
+                    Game.Scene.AddComponent<RealmGateAddressComponent>(); // <<<<<<<<<<<<<<<<<<<< 
                     Game.Scene.AddComponent<GateSessionKeyComponent>();
                     Game.Scene.AddComponent<ConfigComponent>();
                     // Game.Scene.AddComponent<ServerFrameComponent>();
@@ -101,7 +101,7 @@ namespace App {
                     // 以下是斗地主服务端自定义全局组件
                     // GateGlobalComponent
                     Game.Scene.AddComponent<UserComponent>();
-                    Game.Scene.AddComponent<LandlordsGateSessionKeyComponent>();
+                    Game.Scene.AddComponent<LandlordsGateSessionKeyComponent>(); // <<<<<<<<<< 为什么这里要特制一个，同上面有什么不同？如果只是类名的不同，仅只为了客户端热更新方便吗？
                     // MapGlobalComponent
                     Game.Scene.AddComponent<RoomComponent>();
                     // MatchGlobalComponent

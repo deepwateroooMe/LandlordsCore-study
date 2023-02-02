@@ -10,7 +10,6 @@ namespace Google.Protobuf {
 
     [ILAdapter]
     public class Adapt_IMessage: CrossBindingAdaptor {
-
         public override Type BaseCLRType {
             get {
                 return typeof (IMessage);
@@ -21,7 +20,6 @@ namespace Google.Protobuf {
                 return typeof (Adaptor);
             }
         }
-
         public override object CreateCLRInstance(AppDomain appdomain, ILTypeInstance instance) {
             return new Adaptor(appdomain, instance);
         }
@@ -29,7 +27,6 @@ namespace Google.Protobuf {
         public class Adaptor: MyAdaptor, IMessage {
             public Adaptor(AppDomain appdomain, ILTypeInstance instance): base(appdomain, instance) {
             }
-
             protected override AdaptHelper.AdaptMethod[] GetAdaptMethods() {
                 AdaptHelper.AdaptMethod[] methods = {
                     new AdaptHelper.AdaptMethod { Name = "MergeFrom", ParamCount = 1 },
@@ -38,7 +35,6 @@ namespace Google.Protobuf {
                 };
                 return methods;
             }
-
             public void MergeFrom(CodedInputStream input) {
                 Invoke(0, input);
             }

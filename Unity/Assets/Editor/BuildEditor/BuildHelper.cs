@@ -28,7 +28,7 @@ namespace ETEditor {
             Log.Info(info);
         }
 
-        [MenuItem("Tools/web资源服务器")] // <<<<<<<<<<<<<<<<<<<< 
+        [MenuItem("Tools/web资源服务器")] // <<<<<<<<<<<<<<<<<<<< 看这个原理：为什么它必须得运行起来？
         public static void OpenFileServer() {
 #if !UNITY_EDITOR_OSX
             string currentDir = System.Environment.CurrentDirectory;
