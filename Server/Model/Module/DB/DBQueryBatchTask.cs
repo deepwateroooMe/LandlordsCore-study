@@ -18,7 +18,7 @@ namespace ETModel {
     public sealed class DBQueryBatchTask : DBTask {
 
         public string CollectionName { get; set; }
-        public List<long> IdList { get; set; }
+        public List<long> IdList { get; set; } // 传进来的参数：是条款标识的集合，链表
         public TaskCompletionSource<List<ComponentWithId>> Tcs { get; set; }
         
         public override async Task Run() {
@@ -33,7 +33,7 @@ namespace ETModel {
                     ComponentWithId component = dbCacheComponent.GetFromCache(this.CollectionName, id);
                     if (component == null) {
                         IAsyncCursor<ComponentWithId> cursor = await dbComponent.GetCollection(this.CollectionName).FindAsync((s) => s.Id == id); // 异步查找
-                        component = await cursor.FirstOrDefaultAsync(); // 从上面的返回类型里再拿拿。。。
+                        component = await cursor.FirstOrDefaultAsync(); // 从上面的返回类型里再拿第一个或是缺省值，也就成了为每个ID返回表中的靠前的一个条目
                     }
                     if (component == null) {
                         continue;

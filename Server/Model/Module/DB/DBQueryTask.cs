@@ -5,6 +5,7 @@ namespace ETModel {
 
     [ObjectSystem]
     public class DBQueryTaskSystem : AwakeSystem<DBQueryTask, string, TaskCompletionSource<ComponentWithId>> {
+
         public override void Awake(DBQueryTask self, string collectionName, TaskCompletionSource<ComponentWithId> tcs) {
             self.CollectionName = collectionName;
             self.Tcs = tcs;
@@ -28,7 +29,7 @@ namespace ETModel {
             try {
                 // 执行查询数据库任务
                 IAsyncCursor<ComponentWithId> cursor = await dbComponent.GetCollection(this.CollectionName).FindAsync((s) => s.Id == this.Id);
-                component = await cursor.FirstOrDefaultAsync();
+                component = await cursor.FirstOrDefaultAsync(); // 返回的是第一条，或是不存在任何数据情况下的缺少值
                 this.Tcs.SetResult(component);
             }
             catch (Exception e) {

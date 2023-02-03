@@ -117,6 +117,8 @@
      <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Factory\LandlordsEndFactory.cs" />
      <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Factory\LandlordsInteractionFactory.cs" />
      <Compile Include="Assets\Hotfix\Landlords\UI\LandlordsRoom\Factory\LandlordsRoomFactory.cs" />
+     <Compile Include="Assets\Hotfix\Landlords\UI\UIEducationalMode\Component\UIEducationalModeComponent.cs" />
+     <Compile Include="Assets\Hotfix\Landlords\UI\UIEducationalMode\Factory\UIEducationalModeFactory.cs" />
      <Compile Include="Assets\Hotfix\Module\Actor\IActorMessage.cs" />
      <Compile Include="Assets\Hotfix\Module\ActorLocation\IActorLocationMessage.cs" />
      <Compile Include="Assets\Hotfix\Module\Config\ACategory.cs" />

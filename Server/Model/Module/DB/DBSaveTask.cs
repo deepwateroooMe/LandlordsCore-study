@@ -13,6 +13,7 @@ namespace ETModel {
         }
     }
 
+// 异步保存MongoDB数据库中某个表格一条内容的 异步任务包装: 是不是找个包装调用的地方看一下？
     public sealed class DBSaveTask : DBTask {
 
         public ComponentWithId Component;

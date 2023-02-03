@@ -27,7 +27,7 @@ namespace ETModel {
                     continue;
                 }
                 try {
-                    // 执行保存数据库任务
+                    // 执行保存数据库任务: 这里它像是说，置换一个当前表中同ID的一条；如果表格中不存在，就插入这条信息
                     await dbComponent.GetCollection(this.CollectionName).ReplaceOneAsync(s => s.Id == component.Id, component, new UpdateOptions { IsUpsert = true });
                 }
                 catch (Exception e) {

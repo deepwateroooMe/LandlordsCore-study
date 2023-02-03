@@ -18,7 +18,7 @@ public static class AdaptHelper
 
     public static IMethod GetMethod(this ILType type, AdaptMethod m)
     {
-        if (m.Method != null)
+        if (m.Method != null) 
             return m.Method;
 
         m.Method = type.GetMethod(m.Name, m.ParamCount);

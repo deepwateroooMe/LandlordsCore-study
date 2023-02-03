@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace ETModel
+namespace ETModel 
 {
 	public interface ICategory: ISupportInitialize
 	{

@@ -421,12 +421,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   data:
-  - key: StartMatch
+  - key: ChallengeButton
+    gameObject: {fileID: 1195707630231072}
+  - key: ClassicButton
+    gameObject: {fileID: 1558547020820422}
+  - key: StartMatchButton
     gameObject: {fileID: 1941963868261310}
-  - key: Money
-    gameObject: {fileID: 1174451006862572}
-  - key: NickName
-    gameObject: {fileID: 1849176294339882}
 --- !u!114 &114482487677196902
 MonoBehaviour:
   m_ObjectHideFlags: 1
