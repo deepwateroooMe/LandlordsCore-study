@@ -28,5 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Module\Http\" />
+    <Folder Include="Tetris\Account\Handler\" />
+    <Folder Include="Tetris\Session\" />
   </ItemGroup>
 </Project>

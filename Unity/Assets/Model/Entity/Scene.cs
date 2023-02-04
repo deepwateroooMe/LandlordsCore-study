@@ -10,6 +10,8 @@
         public const string Robot = "Robot";
         public const string RobotClient = "RobotClient";
         public const string Realm = "Realm";
+
+        public const string Account = "Account"; // 加了这个，不知道对不对？
     }
     
     public sealed class Scene: Entity {
