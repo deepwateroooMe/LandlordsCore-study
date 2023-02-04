@@ -1,32 +1,25 @@
 ﻿using System;
 using ETModel;
+namespace ETHotfix {
 
-namespace ETHotfix
-{
-	[MessageHandler(AppType.DB)]
-	public class DBQueryRequestHandler : AMRpcHandler<DBQueryRequest, DBQueryResponse>
-	{
-		protected override async void Run(Session session, DBQueryRequest message, Action<DBQueryResponse> reply)
-		{
-			DBQueryResponse response = new DBQueryResponse();
-			try
-			{
-				DBCacheComponent dbCacheComponent = Game.Scene.GetComponent<DBCacheComponent>();
-				ComponentWithId component = await dbCacheComponent.Get(message.CollectionName, message.Id);
+    [MessageHandler(AppType.DB)]
+    public class DBQueryRequestHandler : AMRpcHandler<DBQueryRequest, DBQueryResponse> {
 
-				response.Component = component;
+        protected override async void Run(Session session, DBQueryRequest message, Action<DBQueryResponse> reply) {
+            DBQueryResponse response = new DBQueryResponse();
 
-				if (message.NeedCache && component != null)
-				{
-					dbCacheComponent.AddToCache(component, message.CollectionName);
-				}
-
-				reply(response);
-			}
-			catch (Exception e)
-			{
-				ReplyError(response, e, reply);
-			}
-		}
-	}
+            try {
+                DBCacheComponent dbCacheComponent = Game.Scene.GetComponent<DBCacheComponent>();
+                ComponentWithId component = await dbCacheComponent.Get(message.CollectionName, message.Id);
+                response.Component = component;
+                if (message.NeedCache && component != null) {
+                    dbCacheComponent.AddToCache(component, message.CollectionName);
+                }
+                reply(response);
+            }
+            catch (Exception e) {
+                ReplyError(response, e, reply);
+            }
+        }
+    }
 }

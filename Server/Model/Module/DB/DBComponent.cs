@@ -12,7 +12,7 @@ namespace ETModel {
 // 连接mongodb
     public class DBComponent : Component {
 
-        public MongoClient mongoClient; // 它是以客户端的形式去连接MongoDB数据库中心服务器，所以这里，它仍然定义的是(MongoDB数据库中心服)的客户端连接操作逻辑？
+        public MongoClient mongoClient; // 它是以客户端的形式去连接MongoDB数据库中心服务器（中心服上的数据库，服务器端？），所以这里，它仍然定义的是(MongoDB数据库中心服)的客户端连接操作逻辑？
         public IMongoDatabase database;
 
         public void Awake() {

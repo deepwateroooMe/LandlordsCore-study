@@ -77,9 +77,10 @@ namespace ETModel {
 // Get() GetBatch() GetJson(): 
          public Task<ComponentWithId> Get(string collectionName, long id) {
             ComponentWithId component = GetFromCache(collectionName, id);
-            if (component != null) {
+            if (component != null) { // 非空，读到了，就直接返回
                 return Task.FromResult(component); // 意思是说，把拿到的结果写进包装进一个任务里；从缓存里读(安全吗，数据一致吗)，直接返回了？
             }
+ //　还是说，这里的缓存不止一个？因为下面，仍然是试图从缓存中去读。还是说，这里读不到读到的为空，稍微等会儿再去读？这里没弄明白
             TaskCompletionSource<ComponentWithId> tcs = new TaskCompletionSource<ComponentWithId>(); // 任务类型申明清楚了
              // 创建了这个查询异步任务的包装，是对远程数据库中心服的查询操作，会异步返回结果。这里创建不是new,是工厂化生产的
             DBQueryTask dbQueryTask = ComponentFactory.CreateWithId<DBQueryTask, string, TaskCompletionSource<ComponentWithId>>(id, collectionName, tcs);

@@ -28,7 +28,8 @@ namespace ETEditor {
             Log.Info(info);
         }
 
-        [MenuItem("Tools/web资源服务器")] // <<<<<<<<<<<<<<<<<<<< 看这个原理：为什么它必须得运行起来？
+ // 这里需要去弄明白：这个可运行的程序，是如何打包成这个样子的，去找源码和原理        
+        [MenuItem("Tools/web资源服务器")] // <<<<<<<<<<<<<<<<<<<< 看这个原理：为什么它必须得运行起来？因为它是打包好的可启动可运行的.exe文件，这里可启了这个进程程序
         public static void OpenFileServer() {
 #if !UNITY_EDITOR_OSX
             string currentDir = System.Environment.CurrentDirectory;
@@ -48,7 +49,7 @@ namespace ETEditor {
             BuildTarget buildTarget = BuildTarget.StandaloneWindows;
             string exeName = "ET";
             switch (type) {
-            case PlatformType.PC:
+            case PlatformType.PC: // 这里是window PC 平台打出来的 ET.exe
                 buildTarget = BuildTarget.StandaloneWindows64;
                 exeName += ".exe";
                 break;
@@ -70,17 +71,20 @@ namespace ETEditor {
             
             Log.Info("开始资源打包"); // 这四条日志很容易看见
             BuildPipeline.BuildAssetBundles(fold, buildAssetBundleOptions, buildTarget);
-            
-            GenerateVersionInfo(fold);
+
+            // 去确定：这里是服务器端，还是客户端？我觉得这里更像是服务器端，F:\ettetris\Release\PC\StreamingAssets
+            // 客户端的是在不同的地址，对于Unity Editor，Windows平台，其等价于：Application.dataPath+"/StreamingAssets"
+            // 客户端，本项目，应该是在：　　　　　　　　　　　　　　　　　　F:\ettetris\Release\ET_Data\StreamingAssets
+            GenerateVersionInfo(fold); // 方法定义在下面：就生成了（这个服务器资源存放位置吗？）服务器端的MD5码表文件？
             Log.Info("完成资源打包");
             if (isContainAB) {
                 FileHelper.CleanDirectory("Assets/StreamingAssets/");
                 FileHelper.CopyDirectory(fold, "Assets/StreamingAssets/"); // 它只是简单地把打包的资源包复制到特定可读目录下
             }
             if (isBuildExe) {
-                string[] levels = EditorBuildSettingsScene.GetActiveSceneList(EditorBuildSettings.scenes);
+                string[] levels = EditorBuildSettingsScene.GetActiveSceneList(EditorBuildSettings.scenes); // 这里去拿到unity buildsettings里面的需要打包的几个场景，数组
                 Log.Info("开始EXE打包");
-                BuildPipeline.BuildPlayer(levels, $"{relativeDirPrefix}/{exeName}", buildTarget, buildOptions);
+                BuildPipeline.BuildPlayer(levels, $"{relativeDirPrefix}/{exeName}", buildTarget, buildOptions); // 这里是window PC 平台打出来的 ET.exe
                 Log.Info("完成exe打包");
             }
         }
@@ -93,7 +97,7 @@ namespace ETEditor {
             }
         }
         private static void GenerateVersionProto(string dir, VersionConfig versionProto, string relativePath) {
-            foreach (string file in Directory.GetFiles(dir)) {
+            foreach (string file in Directory.GetFiles(dir)) { // 它就遍历这个资源包文件夹里的每个文件，生成MD5码表
                 string md5 = MD5Helper.FileMD5(file);
                 FileInfo fi = new FileInfo(file);
                 long size = fi.Length;
@@ -104,10 +108,10 @@ namespace ETEditor {
                     Size = size,
                 });
             }
-            foreach (string directory in Directory.GetDirectories(dir)) {
+            foreach (string directory in Directory.GetDirectories(dir)) { // 这里自动解决的文件夹的㠌套问题
                 DirectoryInfo dinfo = new DirectoryInfo(directory);
                 string rel = relativePath == "" ? dinfo.Name : $"{relativePath}/{dinfo.Name}";
-                GenerateVersionProto($"{dir}/{dinfo.Name}", versionProto, rel);
+                GenerateVersionProto($"{dir}/{dinfo.Name}", versionProto, rel); // recursion调用
             }
         }
     }

@@ -9,6 +9,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 namespace ETHotfix {
+
     [ObjectSystem]
     public class DbProxyComponentSystem : AwakeSystem<DBProxyComponent> {
         public override void Awake(DBProxyComponent self) {

@@ -29,8 +29,8 @@ namespace ETModel {
             string versionUrl = "";
             try {
                 using (UnityWebRequestAsync webRequestAsync = ComponentFactory.Create<UnityWebRequestAsync>()) {
- // 把服务器端的资源包版本号： 定位到这个服务器端文件的位置
-                    versionUrl = GlobalConfigComponent.Instance.GlobalProto.GetUrl() + "StreamingAssets/" + "Version.txt";
+// 把服务器端的资源包版本号： 定位到这个服务器端文件的位置　// F:\ettetris\Release\PC\StreamingAssets
+                    versionUrl = GlobalConfigComponent.Instance.GlobalProto.GetUrl() + "StreamingAssets/" + "Version.txt"; 
                     // Log.Debug(versionUrl);
                     await webRequestAsync.DownloadAsync(versionUrl); // 把服务器版本号文件下载下来到客户端了
  // 拿到异步调用（服务器到客户端）的返回结果，反序列化为VersionConfig对象，供客户端比对  MD5  ？                    
@@ -43,7 +43,8 @@ namespace ETModel {
             }
             // 获取streaming目录的Version.txt
             VersionConfig streamingVersionConfig;
-            string versionPath = Path.Combine(PathHelper.AppResPath4Web, "Version.txt"); // 这里不该是：  客户端本地的资源包版本号文件吗，也是通过如下方式读到的？
+// 这里不该是：客户端本地的资源包版本号文件吗，也是通过如下方式读到的？是的　F:\ettetris\Release\ET_Data\StreamingAssets
+            string versionPath = Path.Combine(PathHelper.AppResPath4Web, "Version.txt"); 
             using (UnityWebRequestAsync request = ComponentFactory.Create<UnityWebRequestAsync>()) {
                 await request.DownloadAsync(versionPath);
                 streamingVersionConfig = JsonHelper.FromJson<VersionConfig>(request.Request.downloadHandler.text);
