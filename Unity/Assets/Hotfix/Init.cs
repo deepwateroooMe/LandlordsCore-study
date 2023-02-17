@@ -15,7 +15,7 @@ namespace ETHotfix {
                     Log.Error("mono层是ILRuntime模式, Hotfix层是mono模式");
                 }
 #endif
-                Game.Scene.ModelScene = ETModel.Game.Scene;
+                Game.Scene.ModelScene = ETModel.Game.Scene; // 客户端妄动的时候，会有实例化一个客户端的，模型场景 
                 // 注册热更层回调
                 ETModel.Game.Hotfix.Update = () => { Update(); };
                 ETModel.Game.Hotfix.LateUpdate = () => { LateUpdate(); };

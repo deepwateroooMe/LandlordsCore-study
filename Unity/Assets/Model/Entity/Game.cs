@@ -1,4 +1,4 @@
-﻿namespace ETModel {
+﻿namespace ETModel { // 这个域里面所定义的游戏类：应该是可以双端共享的
     public static class Game {
 
         private static Scene scene;

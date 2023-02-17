@@ -157,8 +157,8 @@ namespace ETHotfix {
       }
     }
 
-    private long key_;
-    public long Key {
+    private long key_; 
+      public long Key { // 这里，从 realm 登录服返回的消息就有一个可以连接网关服的键 key
       get { return key_; }
       set {
         key_ = value;

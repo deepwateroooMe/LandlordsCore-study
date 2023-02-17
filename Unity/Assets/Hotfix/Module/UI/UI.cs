@@ -10,7 +10,6 @@ namespace ETHotfix {
     }
     
     public sealed class UI: Entity {
-
         public string Name {
             get {
                 return this.GameObject.name;
@@ -28,7 +27,6 @@ namespace ETHotfix {
             if (this.IsDisposed) {
                 return;
             }
-            
             base.Dispose();
             foreach (UI ui in this.children.Values) {
                 ui.Dispose();

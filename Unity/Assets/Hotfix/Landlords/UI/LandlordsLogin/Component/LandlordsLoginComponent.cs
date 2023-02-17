@@ -3,7 +3,6 @@ using ETModel;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Net;
-
 namespace ETHotfix {
 
     [ObjectSystem]
@@ -12,8 +11,7 @@ namespace ETHotfix {
             self.Awake();
         }
     }
-
-    // 登录界面组件
+    // 注册、登录界面组件：
     public class LandlordsLoginComponent : Component {
         // 账号输入框
         private InputField account;
@@ -48,13 +46,12 @@ namespace ETHotfix {
         public void SetPrompt(string str) {
             this.prompt.text = str;
         }
-
         // 登录按钮事件
         public async void OnLogin() {
             if (isLogining || this.IsDisposed) {
                 return;
             }
- // 这里没找到： 游戏中哪里什么地方加载了这个对外网络组件  ？
+ // 游戏中哪里什么地方加载了这个对外网络组件？ ETModel 加载的时候就会自动加载这个组件了
             NetOuterComponent netOuterComponent = Game.Scene.ModelScene.GetComponent<NetOuterComponent>();
             // 设置登录中状态
             isLogining = true;
@@ -64,7 +61,7 @@ namespace ETHotfix {
                 IPEndPoint connetEndPoint = NetworkHelper.ToIPEndPoint(GlobalConfigComponent.Instance.GlobalProto.Address);
                 ETModel.Session session = netOuterComponent.Create(connetEndPoint);
                 sessionWrap = ComponentFactory.Create<Session, ETModel.Session>(session);
-                sessionWrap.session.GetComponent<SessionCallbackComponent>().DisposeCallback += s =>  { // 注册回调
+                sessionWrap.session.GetComponent<SessionCallbackComponent>().DisposeCallback += s =>  { // 先注册：回收的回调
                     if (Game.Scene.GetComponent<UIComponent>()?.Get(UIType.LandlordsLogin) != null) {
                         prompt.text = "断开连接";
                         isLogining = false;
@@ -149,8 +146,8 @@ namespace ETHotfix {
                 if (this.IsDisposed) {
                     return;
                 }
-                if (r2C_Register_Ack.Error == ErrorCode.ERR_AccountAlreadyRegister) {
-                    prompt.text = "注册失败，账号已被注册";
+                if (r2C_Register_Ack.Error == ErrorCode.ERR_AccountAlreadyRegister) { // 只处理了这一个相关的错误，其它没管
+                    prompt.text = "注册失败，账号已被注册"; // 所以，是说，这个版本里没有顶号的逻辑？可以去ET7 里找一找这个部分相关的逻辑
                     account.text = "";
                     password.text = "";
                     return;

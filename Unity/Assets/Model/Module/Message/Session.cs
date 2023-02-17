@@ -25,7 +25,7 @@ namespace ETModel {
     // 3处理完压缩解压操作后交给RunDecompressedBytes，该方法比较厉害，调用绑定在Scene实体上的NetWorkConponent上的注册的解包器（默认是Bson）解包。
     // 4解包操作结束后就将其交给绑定在Scene实体上的NetWorkConponent上的messageDispatcher做转发。转发给相应的handler处理。
 
-    public sealed class Session : Entity { // 这个类，还没有弄明白
+    public sealed class Session : Entity { // 这个类，是网络异步调用的会话框
 
         private static int RpcId { get; set; }
         private AChannel channel;
@@ -41,7 +41,7 @@ namespace ETModel {
         }
         public int Error {
             get {
-                return this.channel.Error;
+                return this.channel.Error; // 返回的是，通信信道上抛出的异常
             }
             set {
                 this.channel.Error = value;
@@ -54,7 +54,7 @@ namespace ETModel {
             channel.ErrorCallback += (c, e) => {
                 this.Network.Remove(id); 
             };
-            channel.ReadCallback += this.OnRead; // 初始化（有意识清醒时），注册必要的相关的回调
+            channel.ReadCallback += this.OnRead; // 初始化（有意识清醒时），注册必要的相关的回调：有数据可读，就调用这里的函数来读
         }
         public override void Dispose() {
             if (this.IsDisposed) {
@@ -73,7 +73,7 @@ namespace ETModel {
             // }
             
             this.channel.Dispose(); // 必须得把这些个所有的持有与引用全部清空，才能够真正的释放资源，否则memory leak ?  我们C＃程序员已经不屑于再提这此小细节了。。。。。
-            this.Network.Remove(id); // 
+            this.Network.Remove(id); // Session ＝＝》 Entity ＝＝》 ComponentWithId ＝＝》 Component 它是有ID 的，就是移除当前组件
             this.requestCallback.Clear(); // 
         }
 
@@ -98,14 +98,14 @@ namespace ETModel {
 
         public void OnRead(MemoryStream memoryStream) {
             try {
-                this.Run(memoryStream); // <<<<<<<<<<<<<<<<<<<< 这里读到之后，就会触发回调
+                this.Run(memoryStream); // <<<<<<<<<<<<<<<<<<<< 这里读到之后，就会触发回调 
             }
             catch (Exception e) {
                 Log.Error(e);
             }
         }
         private void Run(MemoryStream memoryStream) { 
-            memoryStream.Seek(Packet.MessageIndex, SeekOrigin.Begin); // 它说，快进指到消息体的那个地方，下标索引
+            memoryStream.Seek(Packet.MessageIndex, SeekOrigin.Begin); // 快进到，消息头
             byte flag = memoryStream.GetBuffer()[Packet.FlagIndex];
 
             // BitConverter.ToUInt16 这个方法是将字节数组指定位置起的两个字节转换为无符号整数。所以我们得先保证messageBytes的长度是大于等于3的。
@@ -114,15 +114,19 @@ namespace ETModel {
             
 #if !SERVER
             if (OpcodeHelper.IsClientHotfixMessage(opcode)) { // 如果是，来自于客户端的热更新消息
- // 这些组件包装狠好玩：它说是来自于客户端的热更新消息，就要触发相关的回调，但可能是这种情况下特有，于是它就把回调再重新包装成组件，实现组件的随需要装卸
+                 // 这些组件包装狠好玩：它说如果是来自于客户端的热更新消息，并且热更层注册了索要回馈通知，就要触发相关的回调。
+                // 会话框消息，返回不返回，不一定，可能是这种情况下特有，于是它就把回调再重新包装成组件，实现组件的随需要装卸
                 this.GetComponent<SessionCallbackComponent>().MessageCallback.Invoke(this, flag, opcode, memoryStream); // <<<<<<<<<< 回调的逻辑定义在哪里呢？
                 return;
             }
 #endif
             object message;
             try {
+                // 这个组件 OpcodeTypeComponent, 它已经早就实例化了各种操作符各有一个实例备用。还没想明白，这是什么奴役（各种客户端会用到的外网渻消息的实例）
                 OpcodeTypeComponent opcodeTypeComponent = this.Network.Entity.GetComponent<OpcodeTypeComponent>();
+                
                 object instance = opcodeTypeComponent.GetInstance(opcode); // 特定类型的消息实例
+                // 这就是，内存流上读消息了，速度应该是很快。主要是如果是服务器间内网消息的话，就直接转发，不用再反序列化，又再序列化才发送了。它说这样客户端不能存消息来减少GC 来着？
                 message = this.Network.MessagePacker.DeserializeFrom(instance, memoryStream); // 利用消息封装体里的反序列化工具将内存流中的消息反序列化到消息实例里去
                 
                 if (OpcodeHelper.IsNeedDebugLogMessage(opcode)) {
@@ -133,7 +137,7 @@ namespace ETModel {
                 // 出现任何消息解析异常都要断开Session，防止客户端伪造消息
                 Log.Error($"opcode: {opcode} {this.Network.Count} {e} ");
                 this.Error = ErrorCode.ERR_PacketParserError;
-                this.Network.Remove(this.Id); // 把这个消息移除
+                this.Network.Remove(this.Id); // 把这个会话移除
                 return;
             }
             // flag第一位为1表示这是rpc返回消息,否则交由MessageDispatcher分发消息
@@ -149,7 +153,7 @@ namespace ETModel {
             if (!this.requestCallback.TryGetValue(response.RpcId, out action)) {
                 return;
             }
- // 如果这个response.RpcId注册了消息接收回调，就先从管理字典中移除回调，再触发回调一次            
+ // 如果这个response.RpcId 被消息的发送方注册了相关的消息接收回调，就先从管理字典中，先移除回调，再触发回调一次            
             this.requestCallback.Remove(response.RpcId);
             action(response);
         }
@@ -225,6 +229,8 @@ namespace ETModel {
                     Log.Msg(message);
                 }
             }
+// ETHotfix 层的消息，还是会走到这里 ETModel Session 这里来真正从内存流上发出去：就到了再来理解内存流的时候了
+            // 这里，理论上的理解是，ETHotfix,ETModel, 更多的是我们程序员框架架构上的分层分域，用来区分可热重载与不可热重载，但是底层，消息的发送，            
             MemoryStream stream = this.Stream;
             stream.Seek(Packet.MessageIndex, SeekOrigin.Begin);
             stream.SetLength(Packet.MessageIndex);

@@ -18,7 +18,9 @@ namespace App {
                 Game.EventSystem.Add(DLLType.Model, typeof(Game).Assembly);
                 Game.EventSystem.Add(DLLType.Hotfix, DllHelper.GetHotfixAssembly());
                 Options options = Game.Scene.AddComponent<OptionComponent, string[]>(args).Options;
-                StartConfig startConfig = Game.Scene.AddComponent<StartConfigComponent, string, int>(options.Config, options.AppId).StartConfig;
+                
+// 下面的：都是从应用的配置里读取出来的
+                StartConfig startConfig = Game.Scene.AddComponent<StartConfigComponent, string, int>(options.Config, options.AppId).StartConfig; 
                 if (!options.AppType.Is(startConfig.AppType)) {
                     Log.Error("命令行参数apptype与配置不一致");
                     return;
@@ -29,14 +31,15 @@ namespace App {
                 LogManager.Configuration.Variables["appTypeFormat"] = $"{startConfig.AppType,-8}";
                 LogManager.Configuration.Variables["appIdFormat"] = $"{startConfig.AppId:D3}";
                 Log.Info($"server start........................ {startConfig.AppId} {startConfig.AppType}");
+                // 加載服务器端的相关的组件
                 Game.Scene.AddComponent<OpcodeTypeComponent>();
-                Game.Scene.AddComponent<MessageDispatherComponent>();
+                Game.Scene.AddComponent<MessageDispatherComponent>(); // 消息分发器
                 // 根据不同的AppType添加不同的组件: 
                 OuterConfig outerConfig = startConfig.GetComponent<OuterConfig>();
                 InnerConfig innerConfig = startConfig.GetComponent<InnerConfig>();
                 ClientConfig clientConfig = startConfig.GetComponent<ClientConfig>();
                 
-                switch (startConfig.AppType) {
+                switch (startConfig.AppType) { // 根据服务器的类型，来添加相关类型所需要的组件
                 case AppType.Manager:
                     Game.Scene.AddComponent<AppManagerComponent>();
                     Game.Scene.AddComponent<NetInnerComponent, string>(innerConfig.Address);
