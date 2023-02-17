@@ -25,7 +25,7 @@ namespace ETModel {
             this.opcodeTypes.Clear();
             this.typeMessages.Clear();
             
-            List<Type> types = Game.EventSystem.GetTypes(typeof(MessageAttribute));
+            List<Type> types = Game.EventSystem.GetTypes(typeof(MessageAttribute)); // 这是所有的，内网，外网，消息类型，有回复无回复的
             foreach (Type type in types) {
                 object[] attrs = type.GetCustomAttributes(typeof(MessageAttribute), false);
                 if (attrs.Length == 0) {
@@ -35,8 +35,8 @@ namespace ETModel {
                 if (messageAttribute == null) {
                     continue;
                 }
-                this.opcodeTypes.Add(messageAttribute.Opcode, type);
-                this.typeMessages.Add(messageAttribute.Opcode, Activator.CreateInstance(type)); // 程序集？第一次加载的时候，不得不创建新的实例
+                this.opcodeTypes.Add(messageAttribute.Opcode, type); // 真实的 type 类型
+                this.typeMessages.Add(messageAttribute.Opcode, Activator.CreateInstance(type)); // 程序集？第一次加载的时候，不得不创建相应消息的新的实例
             }
         }
         public ushort GetOpcode(Type type) {

@@ -18,24 +18,23 @@ namespace ETModel {
  // 这里没有弄懂：
     
     // 器响应一个反馈消息。 定义消息或者rpc请求的时候使用Message标签设置消息类型与opcode的对应关系。 session是由NetworkComponent创建的，参数是 NetworkComponent的本类实例 + 用于收发字节码的AChannel实例。这个AChannel则是由NetworkComponent中的AService工厂创建的。
-    // 流程：
-    // 1创建session后（调用构造函数），session开始StartRecv()方法，这个方法循环通过异步方法调用channel的Recv()方法，接收链接另一端发来的数据。
-    // 2，  3，  没跟上，不知道这里说的是什么意思
-    // 2接收到消息后调用Run方法，run方法检查接收到的数据包是否有压缩，并指向相应的操作。（就是当前Session里面的Run()方法，要看懂）
+    // 流程：（自己之前不是写过 WebSocket 双端通讯的小例子吗？就是把原本在信道上 Channel 上的三个异步操作：接收，读，和什么？封装到了 session 里而已呀）
+    // 1创建session后（调用构造函数），session开始StartRecv()方法，这个方法循环通过异步方法调用channel的Recv()方法，接收链接另一端发来的数据。（这里说的应该是服务器端）
+    // 2接收到消息后调用Run方法，run方法检查接收到的数据包是否有压缩，并指向相应的操作。（这里感觉跟源码稍微有点儿不一样）
     // 3处理完压缩解压操作后交给RunDecompressedBytes，该方法比较厉害，调用绑定在Scene实体上的NetWorkConponent上的注册的解包器（默认是Bson）解包。
     // 4解包操作结束后就将其交给绑定在Scene实体上的NetWorkConponent上的messageDispatcher做转发。转发给相应的handler处理。
 
-    public sealed class Session : Entity { // 这个类，是网络异步调用的会话框
+    public sealed class Session : Entity { // 这个类，是网络异步调用的会话框：想要多看几遍，是异步网络调用中的一个梳杻
 
-        private static int RpcId { get; set; }
+        private static int RpcId { get; set; } // 静态
         private AChannel channel;
 
         // Rpc调用回调的字典管理：值是Rpc回调回IResponse后的回调函数
         private readonly Dictionary<int, Action<IResponse>> requestCallback = new Dictionary<int, Action<IResponse>>();
-        private readonly List<byte[]> byteses = new List<byte[]>() { new byte[1], new byte[2] }; // byteses应该就是通道中传输的数据了。
+        private readonly List<byte[]> byteses = new List<byte[]>() { new byte[1], new byte[2] }; // byteses应该就是通道中传输的数据了
 
         public NetworkComponent Network {
-            get {
+            get { // Session 的 Parent 是：ETModel.Game.Scene 吗？
                 return this.GetParent<NetworkComponent>(); // 把父控件作为NetworkComponent返回
             }
         }
@@ -96,15 +95,15 @@ namespace ETModel {
             }
         }
 
-        public void OnRead(MemoryStream memoryStream) {
+        public void OnRead(MemoryStream memoryStream) { // 这就是2: 接到消息后调用 Run() 方法呀
             try {
-                this.Run(memoryStream); // <<<<<<<<<<<<<<<<<<<< 这里读到之后，就会触发回调 
+                this.Run(memoryStream);
             }
             catch (Exception e) {
                 Log.Error(e);
             }
         }
-        private void Run(MemoryStream memoryStream) { 
+        private void Run(MemoryStream memoryStream) { // 这就是从内存上发消息
             memoryStream.Seek(Packet.MessageIndex, SeekOrigin.Begin); // 快进到，消息头
             byte flag = memoryStream.GetBuffer()[Packet.FlagIndex];
 
@@ -114,10 +113,10 @@ namespace ETModel {
             
 #if !SERVER
             if (OpcodeHelper.IsClientHotfixMessage(opcode)) { // 如果是，来自于客户端的热更新消息
-                 // 这些组件包装狠好玩：它说如果是来自于客户端的热更新消息，并且热更层注册了索要回馈通知，就要触发相关的回调。
+                 // 它说如果是来自于客户端的热更新消息，并且热更层注册了索要回馈通知，就要触发相关的回调。
                 // 会话框消息，返回不返回，不一定，可能是这种情况下特有，于是它就把回调再重新包装成组件，实现组件的随需要装卸
                 this.GetComponent<SessionCallbackComponent>().MessageCallback.Invoke(this, flag, opcode, memoryStream); // <<<<<<<<<< 回调的逻辑定义在哪里呢？
-                return;
+                return; 
             }
 #endif
             object message;

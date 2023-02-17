@@ -5,7 +5,7 @@ namespace ETHotfix {
 
     [UIFactory(UIType.LandlordsLobby)]
     public class LandlordsLobbyFactory : IUIFactory {
-// type: LandLordsLogin LandlordsLobby LandlordsRoom etc 表明的是UI预设的字符串名字
+// type: LandLordsLogin LandlordsLobby LandlordsRoom etc 表明的是UI预设的字符串名字, 给它一个类型标注相区分
         public UI Create(Scene scene, string type, GameObject parent) { 
             try {
                 // 加载AB包

@@ -134,5 +134,24 @@ namespace ETHotfix {
 * T框架-19 ET框架账号中心服逻辑编写（1）
 - https://blog.csdn.net/m0_48781656/article/details/124899665?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-124899665-blog-123592622.pc_relevant_multi_platform_whitelistv3&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-124899665-blog-123592622.pc_relevant_multi_platform_whitelistv3&utm_relevant_index=2
 - 现在，对ET 框架里，热更新层，不变层的大的框架层次，稍微开始有点儿概念。还需要再多理一理。现在觉得，只要自己感兴趣，想要找的逻辑都能够找得出来。只是还需要多运行几遍帮助理解消化。
-- 但是现在什么都有了，应该能够很好地实现 ET 的头加自己项目的主体部分了。
+- 但是现在什么都有了，应该能够很好地实现 ET 的头加自己项目的主体部分了。客户端的逻辑基本都懂了，服务器端需要明天上午再看一下
+- 再多明天上午几个小时，应该基本上差不多了。
 - 只是仍需要考虑，将来如何自己写个多人小游戏？
+- 爱亲爱的表哥，活宝妹一定要嫁的亲爱的表哥！！！，爱生活。活宝妹一定要嫁给亲爱的表哥。爱亲爱的表哥，活宝妹一定要嫁的亲爱的表哥！！！爱生活！！！
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

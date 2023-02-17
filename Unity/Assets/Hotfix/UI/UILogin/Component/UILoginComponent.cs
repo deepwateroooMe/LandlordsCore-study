@@ -23,16 +23,18 @@ namespace ETHotfix {
             try {
                 string text = this.account.GetComponent<InputField>().text;
 
+// 这里的层次概念就出来：热更新层 ETHotfix 有一个 Session; 不可热更新层 ETModel 也有一个Session;
                 // 创建一个ETModel层的Session: 因为是客户端要发消息给注册登录服，所以是外网消息
                 ETModel.Session session = ETModel.Game.Scene.GetComponent<NetOuterComponent>().Create(GlobalConfigComponent.Instance.GlobalProto.Address);
                 // 创建一个ETHotfix层的Session, ETHotfix的Session会通过ETModel层的Session发送消息
                 Session realmSession = ComponentFactory.Create<Session, ETModel.Session>(session); // 这里再创建一遍，有个ID 要赋值，仍是拿上面 session 来创建的
+
                 // 客户端调用 realm 登录服，等待返回 R2C_Login 消息
                 R2C_Login r2CLogin = (R2C_Login) await realmSession.Call(new C2R_Login() { Account = text, Password = "111111" }); // <<<<<<<<<< Key
                 realmSession.Dispose(); 
 
-                // 创建一个ETModel层的Session,并且保存到ETModel.SessionComponent中
-                ETModel.Session gateSession = ETModel.Game.Scene.GetComponent<NetOuterComponent>().Create(r2CLogin.Address);
+                // 创建一个ETModel层的Session,并且保存到ETModel.SessionComponent中；前面ETMode 域的Init.cs 添加这个组件 
+                ETModel.Session gateSession = ETModel.Game.Scene.GetComponent<NetOuterComponent>().Create(r2CLogin.Address); 
                 ETModel.Game.Scene.AddComponent<ETModel.SessionComponent>().Session = gateSession;
                 // 创建一个ETHotfix层的Session, 并且保存到ETHotfix.SessionComponent中
                 Game.Scene.AddComponent<SessionComponent>().Session = ComponentFactory.Create<Session, ETModel.Session>(gateSession);
