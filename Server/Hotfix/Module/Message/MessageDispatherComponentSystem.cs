@@ -17,7 +17,7 @@ namespace ETHotfix {
     }
 
 // 消息分发组件
-    public static class MessageDispatherComponentEx {
+    public static class MessageDispatherComponentEx { // 为什么这里必须得有个扩展类 ?
 
         public static void Load(this MessageDispatherComponent self) {
             self.Handlers.Clear();
@@ -38,7 +38,7 @@ namespace ETHotfix {
                     continue;
                 }
                 Type messageType = iMHandler.GetMessageType();
-                ushort opcode = Game.Scene.GetComponent<OpcodeTypeComponent>().GetOpcode(messageType);
+                ushort opcode = Game.Scene.GetComponent<OpcodeTypeComponent>().GetOpcode(messageType); // 注意这里，域的不同 Game.Scene
                 if (opcode == 0) {
                     Log.Error($"消息opcode为0: {messageType.Name}");
                     continue;

@@ -16,7 +16,7 @@ namespace ETHotfix {
                 GameObject lobby = UnityEngine.Object.Instantiate(bundleGameObject);
                 // 设置UI层级，只有UI摄像机可以渲染
                 lobby.layer = LayerMask.NameToLayer(LayerNames.UI);
-                UI ui = ComponentFactory.Create<UI, GameObject>(lobby);
+                UI ui = ComponentFactory.Create<UI, GameObject>(lobby); // lobbyUI
                 ui.AddComponent<LandlordsLobbyComponent>();
                 return ui;
             }

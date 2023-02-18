@@ -6,7 +6,7 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace ETModel {
 
     [BsonIgnoreExtraElements]
-    public class Entity : ComponentWithId {
+    public class Entity : ComponentWithId { // Entity ＝＝》 ComponentWithId ＝＝》 Component 把三者的区别弄清楚 
 
         [BsonElement("C")]
         [BsonIgnoreIfNull]

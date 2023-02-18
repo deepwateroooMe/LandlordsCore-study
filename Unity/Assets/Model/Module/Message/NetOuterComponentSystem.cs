@@ -7,8 +7,8 @@ namespace ETHotfix {
     public class NetOuterComponentAwakeSystem : AwakeSystem<NetOuterComponent> {
         public override void Awake(NetOuterComponent self) {
             self.Awake(self.Protocol);
-            self.MessagePacker = new ProtobufPacker();
-            self.MessageDispatcher = new OuterMessageDispatcher(); // <<<<<<<<<< 
+            self.MessagePacker = new ProtobufPacker(); // 外网消息：全都是用 ProtobufPacker 系统
+            self.MessageDispatcher = new OuterMessageDispatcher(); 
         }
     }
     [ObjectSystem]
@@ -16,14 +16,14 @@ namespace ETHotfix {
         public override void Awake(NetOuterComponent self, string address) {
             self.Awake(self.Protocol, address);
             self.MessagePacker = new ProtobufPacker();
-            self.MessageDispatcher = new OuterMessageDispatcher(); // <<<<<<<<<< 
+            self.MessageDispatcher = new OuterMessageDispatcher(); 
         }
     }
     [ObjectSystem]
     public class NetOuterComponentLoadSystem : LoadSystem<NetOuterComponent> {
         public override void Load(NetOuterComponent self) {
             self.MessagePacker = new ProtobufPacker();
-            self.MessageDispatcher = new OuterMessageDispatcher(); // <<<<<<<<<< 
+            self.MessageDispatcher = new OuterMessageDispatcher(); 
         }
     }
     

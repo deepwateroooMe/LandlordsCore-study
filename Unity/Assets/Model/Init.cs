@@ -36,7 +36,7 @@ namespace ETModel {
                 Game.Scene.GetComponent<ResourcesComponent>().LoadBundle("config.unity3d");
                 Game.Scene.AddComponent<ConfigComponent>();
                 Game.Scene.GetComponent<ResourcesComponent>().UnloadBundle("config.unity3d");
-                Game.Scene.AddComponent<OpcodeTypeComponent>();
+                Game.Scene.AddComponent<OpcodeTypeComponent>(); // 发消息的时候就会用到这个
                 Game.Scene.AddComponent<MessageDispatherComponent>(); // 消息分发器
                 Game.Hotfix.GotoHotfix();
                 Game.EventSystem.Run(EventIdType.TestHotfixSubscribMonoEvent, "TestHotfixSubscribMonoEvent");

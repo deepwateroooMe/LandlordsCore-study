@@ -22,7 +22,7 @@ namespace ETModel {
         public StartConfig DBConfig { get; private set; }
         public StartConfig RealmConfig { get; private set; }
         public StartConfig LocationConfig { get; private set; }
-        public StartConfig MatchConfig { get; private set; } // 不知道这个说的是什么意思，本能的就去想是斗地主中的逻辑，但应该不是
+        public StartConfig MatchConfig { get; private set; } // 应该是某种同步机制：类似 MongoDB 里的数据同步之类的？但不指一个服务器内，更可能是多个不同服务器之间的同步？
 
         public List<StartConfig> MapConfigs { get; private set; } // 这两种，可能都不止一个，可以有狠多个
         public List<StartConfig> GateConfigs { get; private set; }

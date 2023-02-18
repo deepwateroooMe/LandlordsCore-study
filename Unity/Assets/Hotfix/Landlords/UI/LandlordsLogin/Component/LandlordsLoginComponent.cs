@@ -92,9 +92,9 @@ namespace ETHotfix {
                 connetEndPoint = NetworkHelper.ToIPEndPoint(r2C_Login_Ack.Address); // 可是这里不明明写的是Realm 2 Client的吗？怎么是去Gate网关的呢？
                 ETModel.Session gateSession = netOuterComponent.Create(connetEndPoint);
                 Game.Scene.AddComponent<SessionComponent>().Session = ComponentFactory.Create<Session, ETModel.Session>(gateSession); // 重新工厂实例化一个去网关服的会话消息
-                // SessionWeap添加连接断开组件，用于处理客户端连接断开
-                Game.Scene.GetComponent<SessionComponent>().Session.AddComponent<SessionOfflineComponent>();
-                Game.Scene.ModelScene.AddComponent<ETModel.SessionComponent>().Session = gateSession; // 这个会话存放的地方，好像稍有不同 
+                // SessionWrap添加连接断开组件，用于处理客户端连接断开
+                Game.Scene.GetComponent<SessionComponent>().Session.AddComponent<SessionOfflineComponent>(); // 这个例子可以明白：框架的定义在哪里，游戏中如何
+                Game.Scene.ModelScene.AddComponent<ETModel.SessionComponent>().Session = gateSession; // 这个会话存放的地方，客户端维护的唯一会话框；与且仅与网关服会话
                 // 登录Gate服务器：这里跟我查找的理论图稍有不同，它说先从注册登录服返回，可以拿到一个Key,再用这个Key去连网关gate服
                 G2C_LoginGate_Ack g2C_LoginGate_Ack = await SessionComponent.Instance.Session.Call(new C2G_LoginGate_Req() { Key = r2C_Login_Ack.Key }) as G2C_LoginGate_Ack;
                 if (g2C_LoginGate_Ack.Error == ErrorCode.ERR_ConnectGateKeyError) {

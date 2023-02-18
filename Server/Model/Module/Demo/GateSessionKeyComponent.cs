@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 namespace ETModel {
     public class GateSessionKeyComponent : Component {
-
         private readonly Dictionary<long, string> sessionKey = new Dictionary<long, string>();
         
         public void Add(long key, string account) {
@@ -17,7 +16,7 @@ namespace ETModel {
             this.sessionKey.Remove(key);
         }
         private async void TimeoutRemoveKey(long key) {
-            await Game.Scene.GetComponent<TimerComponent>().WaitAsync(20000); // 这个是：任何的键都只管20秒有效吗？
+            await Game.Scene.GetComponent<TimerComponent>().WaitAsync(20000); // 定义一个有效 Key 的有效时间是20 秒
             this.sessionKey.Remove(key);
         }
     }

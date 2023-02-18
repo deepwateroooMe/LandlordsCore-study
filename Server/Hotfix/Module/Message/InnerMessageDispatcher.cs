@@ -18,7 +18,7 @@ namespace ETHotfix {
                         session.Reply(response);
                         return;
                     }
-                    MailBoxComponent mailBoxComponent = entity.GetComponent<MailBoxComponent>();
+                    MailBoxComponent mailBoxComponent = entity.GetComponent<MailBoxComponent>(); // 消息分发器上背的都有这个组件
                     if (mailBoxComponent == null) { // 内网发消息，如果不具备发送消息的能力，就返回错误信息
                         ActorResponse response = new ActorResponse {
                             Error = ErrorCode.ERR_ActorNoMailBoxComponent,

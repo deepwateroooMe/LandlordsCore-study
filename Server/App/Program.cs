@@ -8,7 +8,7 @@ using PF;
 using ABPath = ETModel.ABPath;
 using Path = System.IO.Path;
 namespace App {
-    internal static class Program {
+    internal static class Program { // 服务器端的入口程序
 
         private static void Main(string[] args) {
             // 异步方法全部会回掉到主线程

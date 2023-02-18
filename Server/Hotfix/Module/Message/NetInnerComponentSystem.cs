@@ -18,7 +18,7 @@ namespace ETHotfix {
     [ObjectSystem]
     public class NetInnerComponentLoadSystem : LoadSystem<NetInnerComponent> {
         public override void Load(NetInnerComponent self) {
-            self.MessagePacker = new MongoPacker();
+            self.MessagePacker = new MongoPacker(); // 是内网消息全都用这个Mono 系列 ?
             self.MessageDispatcher = new InnerMessageDispatcher(); // <<<<<<<<<< 
         }
     }
