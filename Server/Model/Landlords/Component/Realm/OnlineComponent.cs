@@ -1,42 +1,21 @@
-﻿using System.Collections.Generic;
+﻿ using System.Collections.Generic;
+namespace ETModel {
 
-namespace ETModel
-{
-    /// <summary>
-    /// 在线组件，用于记录在线玩家
-    /// </summary>
-    public class OnlineComponent : Component
-    {
+    // 在线组件，用于记录在线玩家。这里是 Realm 注册登录服的组件，它身背一个本地缓存字典
+    public class OnlineComponent : Component {
         private readonly Dictionary<long, int> dictionary = new Dictionary<long, int>();
-
-        /// <summary>
-        /// 添加在线玩家
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="gateAppId"></param>
-        public void Add(long userId, int gateAppId)
-        {
+        // 添加在线玩家
+        public void Add(long userId, int gateAppId) {
             dictionary.Add(userId, gateAppId);
         }
-
-        /// <summary>
-        /// 获取在线玩家网关服务器ID
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <returns></returns>
-        public int Get(long userId)
-        {
+        // 获取在线玩家网关服务器ID
+        public int Get(long userId) {
             int gateAppId;
             dictionary.TryGetValue(userId, out gateAppId);
             return gateAppId;
         }
-
-        /// <summary>
-        /// 移除在线玩家
-        /// </summary>
-        /// <param name="userId"></param>
-        public void Remove(long userId)
-        {
+        // 移除在线玩家
+        public void Remove(long userId) {
             dictionary.Remove(userId);
         }
     }

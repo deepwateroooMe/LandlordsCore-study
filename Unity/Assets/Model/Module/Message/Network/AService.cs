@@ -3,14 +3,14 @@ using System.Net;
 namespace ETModel {
 
     public enum NetworkProtocol {
-        KCP,
+        KCP, // 这个，就没有弄明白
         TCP,
         WebSocket,
     }
 
     public abstract class AService: Component {
 
-        // 每个服务:只对应唯一一个通信信道吗 ?
+        // 每个服务:只对应唯一一个通信信道
         public abstract AChannel GetChannel(long id);
 
         private Action<AChannel> acceptCallback;

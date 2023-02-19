@@ -1,51 +1,36 @@
 using PF;
+namespace ETModel {
 
-namespace ETModel
-{
     [ObjectSystem]
-    public class PathfindingComponentAwakeSystem : AwakeSystem<PathfindingComponent>
-    {
-        public override void Awake(PathfindingComponent self)
-        {
-            self.PathReturnQueue = new PathReturnQueue(self);
+    public class PathfindingComponentAwakeSystem : AwakeSystem<PathfindingComponent> {
+
+        public override void Awake(PathfindingComponent self) {
+            self.PathReturnQueue = new PathReturnQueue(self); // 不知道，这是什么鬼东西
             self.PathProcessor = new PathProcessor(self.PathReturnQueue, 1, false);
-            
             // 读取寻路配置
-            self.AStarConfig = new AStarConfig(); //MongoHelper.FromJson<AStarConfig>(File.ReadAllText("./pathfinding.config"));
+            self.AStarConfig = new AStarConfig(); // MongoHelper.FromJson<AStarConfig>(File.ReadAllText("./pathfinding.config"));
             self.AStarConfig.pathProcessor = self.PathProcessor;
-            
             // 读取地图数据
             self.AStarConfig.graphs = DeserializeHelper.Load("./graph.bytes");
         }
     }
-    
-    public class PathfindingComponent: Component
-    {
+    public class PathfindingComponent: Component {
         public PathReturnQueue PathReturnQueue;
-        
         public PathProcessor PathProcessor;
-
         public AStarConfig AStarConfig;
         
-        public bool Search(ABPath path)
-        {
+        public bool Search(ABPath path) {
             this.PathProcessor.queue.Push(path.Path);
-            while (this.PathProcessor.CalculatePaths().MoveNext())
-            {
-                if (path.Path.CompleteState != PathCompleteState.NotCalculated)
-                {
+            while (this.PathProcessor.CalculatePaths().MoveNext()) {
+                if (path.Path.CompleteState != PathCompleteState.NotCalculated) {
                     break;
                 }
             }
-
-            if (path.Path.CompleteState != PathCompleteState.Complete)
-            {
+            if (path.Path.CompleteState != PathCompleteState.Complete) {
                 return false;
             }
-            
             PathModifyHelper.StartEndModify((PF.ABPath)path.Path);
             PathModifyHelper.FunnelModify(path.Path);
-
             return true;
         }
     }

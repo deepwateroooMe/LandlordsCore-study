@@ -1,12 +1,8 @@
-﻿using System.Collections.Generic;
+﻿ using System.Collections.Generic;
+namespace ETModel {
 
-namespace ETModel
-{
-    /// <summary>
-    /// 分配房间服务器组件，逻辑在AllotMapComponentSystem扩展
-    /// </summary>
-    public class AllotMapComponent : Component
-    {
+    // 分配房间服务器组件，逻辑在AllotMapComponentSystem扩展
+    public class AllotMapComponent : Component {
         public readonly List<StartConfig> MapAddress = new List<StartConfig>();
     }
 }

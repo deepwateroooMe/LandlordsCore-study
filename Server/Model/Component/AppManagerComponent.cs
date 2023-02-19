@@ -50,7 +50,7 @@ namespace ETModel {
                 Log.Error(e);
             }
         }
-        // 监控启动的进程,如果进程挂掉了,重新拉起
+        // 监控启动的进程,如果进程挂掉了,重新拉起. 就是对服务器端的宕机，保活
         private async void WatchProcessAsync() {
             long instanceId = this.InstanceId;
             

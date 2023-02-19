@@ -14,12 +14,11 @@ namespace ETModel {
         private Assembly assembly;
 #endif
         private IStaticMethod start;
-        public Action Update;
+        public Action Update; // 程序域层面，必备的几个回调事件，与游戏引擎中的回调事件同步
         public Action LateUpdate;
         public Action OnApplicationQuit;
 
-        public Hotfix() {
-        }
+        public Hotfix() {  }
 
         public void GotoHotfix() {
 #if ILRuntime

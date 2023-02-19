@@ -30,19 +30,16 @@ namespace ETModel {
             }
         }
     }
-
- // 这里应该是说：服务器端自带缓存机制，应该也可以理解为，它有个专用线程什么之类的，作为后备军劳力，只要有任务，这个线程就去运行，以便在最快的时间之内能够返回给客户端？
- // 上面是初步猜测的，要用源码来验证是否猜测正确？？？
-    public sealed class DBTaskQueue : Component { // 关于异步任务的部分，
-
+    // 这个，没太看懂
+    public sealed class DBTaskQueue : Component { // 关于异步任务的部分，数据库任务缓存壳加工厂：壳是对数据库异步任务的包装，感觉像是数据库异步任务的对象池
         public Queue<DBTask> queue = new Queue<DBTask>(); // 这里不曾说任务是单一的，可以混杂的，可是查询，增删查改等混杂的
-        public TaskCompletionSource<DBTask> tcs;
+        public TaskCompletionSource<DBTask> tcs;          // 还是看得狠昏：有个空的可以执行并写结果的壳？
 
         public void Add(DBTask task) { // 这里加的是什么意思，居然没有看明白
             if (this.tcs != null) {
                 var t = this.tcs;
-                this.tcs = null; // 置空了
-                t.SetResult(task); // 先前的任务这里写结果吗？
+                this.tcs = null;   // 置空了
+                t.SetResult(task); // 直接执行当前任务 ?
                 return;
             }
             this.queue.Enqueue(task);

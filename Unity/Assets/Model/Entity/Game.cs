@@ -1,6 +1,6 @@
 ﻿namespace ETModel { // 这个域里面所定义的游戏类：应该是可以双端共享的
     public static class Game {
-
+        // 静态类：规定了游戏的几大组件：场景，事件回调系统，对象池，热更新，关？
         private static Scene scene;
         public static Scene Scene {
             get {
