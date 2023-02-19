@@ -24,7 +24,7 @@ namespace ETModel {
         public override async Task Run() {
             DBComponent dbComponent = Game.Scene.GetComponent<DBComponent>();
             try {
-                // 执行保存数据库任务：这里是更新当前栏，不包括添加
+                // 执行保存数据库任务：设置的UpdateOptions IsUpsert=true 说明了，如果当前表格不存在这个 id, 则直接将这条待操作数据添加进该表格（文档）
                 await dbComponent.GetCollection(this.CollectionName).ReplaceOneAsync(s => s.Id == this.Component.Id, this.Component, new UpdateOptions {IsUpsert = true});
                 this.Tcs.SetResult(true);
             }
@@ -32,5 +32,9 @@ namespace ETModel {
                 this.Tcs.SetException(new Exception($"保存数据失败!  {CollectionName} {Id}", e));
             }
         }
+        // UpdateOptions
+        // BypassDocumentValidation：Gets or sets a value indicating whether to bypass document validation.（是否绕过文档验证获取或设置一个值。）
+        // IsUpsert：Gets or sets a value indicating whether to insert the document if it doesn’t already exist.（获取或设置一个值，该值指示在文档不存在该值时是否插入该文档（创建值）。）
+
     }
 }

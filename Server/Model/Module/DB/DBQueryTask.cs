@@ -2,25 +2,21 @@
 using System.Threading.Tasks;
 using MongoDB.Driver;
 namespace ETModel {
-
     [ObjectSystem]
     public class DBQueryTaskSystem : AwakeSystem<DBQueryTask, string, TaskCompletionSource<ComponentWithId>> {
-
         public override void Awake(DBQueryTask self, string collectionName, TaskCompletionSource<ComponentWithId> tcs) {
             self.CollectionName = collectionName;
             self.Tcs = tcs;
         }
     }
-
     public sealed class DBQueryTask : DBTask {
-
         public string CollectionName { get; set; }
         public TaskCompletionSource<ComponentWithId> Tcs { get; set; }
 
         public override async Task Run() {
             DBCacheComponent dbCacheComponent = Game.Scene.GetComponent<DBCacheComponent>();
             DBComponent dbComponent = Game.Scene.GetComponent<DBComponent>();
-            // 执行查询前先看看cache中是否已经存在
+            // 执行查询: 先试图直接从缓存中读取，因为性能好速度快；读不到，再去异步从数据库中读取 
             ComponentWithId component = dbCacheComponent.GetFromCache(this.CollectionName, this.Id);
             if (component != null) {
                 this.Tcs.SetResult(component);

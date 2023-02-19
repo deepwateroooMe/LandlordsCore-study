@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 namespace ETModel {
-
     [ObjectSystem]
     public class DBQueryJsonTaskAwakeSystem : AwakeSystem<DBQueryJsonTask, string, string, TaskCompletionSource<List<ComponentWithId>>> {
         public override void Awake(DBQueryJsonTask self, string collectionName, string json, TaskCompletionSource<List<ComponentWithId>> tcs) {
@@ -12,13 +11,10 @@ namespace ETModel {
             self.Tcs = tcs;
         }
     }
-
     public sealed class DBQueryJsonTask : DBTask {
-
         public string CollectionName { get; set; }
         public string Json { get; set; }
         public TaskCompletionSource<List<ComponentWithId>> Tcs { get; set; }
-        
         public override async Task Run() {
             DBComponent dbComponent = Game.Scene.GetComponent<DBComponent>();
             try {

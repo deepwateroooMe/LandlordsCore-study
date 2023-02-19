@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 namespace ETModel {
-
     [ObjectSystem]
     public class DbSaveBatchTaskSystem : AwakeSystem<DBSaveBatchTask, List<ComponentWithId>, string, TaskCompletionSource<bool>> {
         public override void Awake(DBSaveBatchTask self, List<ComponentWithId> components, string collectionName, TaskCompletionSource<bool> tcs) {
@@ -13,16 +12,14 @@ namespace ETModel {
             self.Tcs = tcs;
         }
     }
-
     public sealed class DBSaveBatchTask : DBTask {
-
         public string CollectionName { get; set; }
-        public List<ComponentWithId> Components;
+        public List<ComponentWithId> Components; // 这里是：一批 IDs, 不止一个，所以称为批量批量操作
         public TaskCompletionSource<bool> Tcs;
     
         public override async Task Run() {
             DBComponent dbComponent = Game.Scene.GetComponent<DBComponent>();
-            foreach (ComponentWithId component in this.Components) {
+            foreach (ComponentWithId component in this.Components) { // 就是遍历：对每一个 Id 文档里的每一条进行执行
                 if (component == null) {
                     continue;
                 }
