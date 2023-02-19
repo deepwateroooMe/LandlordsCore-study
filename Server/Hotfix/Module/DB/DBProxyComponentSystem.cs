@@ -17,7 +17,7 @@ namespace ETHotfix {
         }
     }
     
-    // 用来与数据库操作代理
+    // 用来与数据库操作代理: 
     public static class DBProxyComponentEx {
         public static void Awake(this DBProxyComponent self) {
             StartConfig dbStartConfig = StartConfigComponent.Instance.DBConfig;

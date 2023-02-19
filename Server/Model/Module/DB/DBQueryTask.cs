@@ -27,7 +27,7 @@ namespace ETModel {
                 return;
             }
             try {
-                // 执行查询数据库任务
+                // 执行查询数据库任务:首先调用API-FindAsync获取一个数据游标。然后调用第二个API-FirstOrDefaultAsync获取真正的数据类
                 IAsyncCursor<ComponentWithId> cursor = await dbComponent.GetCollection(this.CollectionName).FindAsync((s) => s.Id == this.Id);
                 component = await cursor.FirstOrDefaultAsync(); // 返回的是第一条，或是不存在任何数据情况下的缺少值
                 this.Tcs.SetResult(component);

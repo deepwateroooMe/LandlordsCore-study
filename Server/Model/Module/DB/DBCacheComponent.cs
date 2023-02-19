@@ -3,21 +3,19 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 namespace ETModel {
-
     [ObjectSystem]
     public class DbCacheComponentSystem : AwakeSystem<DBCacheComponent> {
         public override void Awake(DBCacheComponent self) {
             self.Awake();
         }
     }
- // 不是狠懂，要再理解一下
 // 用来缓存数据: 这里感觉稍微有点儿陌生，主要是MongoDB的集群缓存机制自己还不懂，还没细读源码，不知道说的是不是一回事儿？不是一回事儿?好像是，所以没有理解透彻
     public class DBCacheComponent : Component {
 
         // 表名，表中所有条目存字典里
         public Dictionary<string, Dictionary<long, ComponentWithId>> cache = new Dictionary<string, Dictionary<long, ComponentWithId>>();
-
-        public const int taskCount = 32;
+        // ET中一共定有32条DBTaskQueue，如果数量不够的话，有些数据库操作耗时很长，这样其他数据库任务会等待太久才能执行。而数据库本身是多线程的操作，所以可以将任务分为32条，防止全部等待某一条操作耗时太久。
+        public const int taskCount = 32; // 感觉，好像是32 条线程来多线程处理。【想的是对的】
         public List<DBTaskQueue> tasks = new List<DBTaskQueue>(taskCount); // 可以有包含32个任务队列的链表
 
         public void Awake() {
