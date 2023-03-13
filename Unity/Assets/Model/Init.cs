@@ -5,10 +5,9 @@ using Google.Protobuf;
 using UnityEngine;
 
 namespace ETModel {
-
     // TODO: 这里，需要去比较一下， et7 里与 et4 的斗地主里的起始有什么区别，去理解 7 里起始时作者标的那句话
+    // 客户端入口程序： 
     public class Init : MonoBehaviour {
-
         private async void Start() {
             try { 
                 if (!Application.unityVersion.StartsWith("2017.4")) {
@@ -30,16 +29,16 @@ namespace ETModel {
                 // 用于保存玩家本地数据
                 Game.Scene.AddComponent<ClientComponent>(); // ETModel 启动的时候会添加这个客户端组件 
                 // 下载ab包
-                await BundleHelper.DownloadBundle();
-                Game.Hotfix.LoadHotfixAssembly(); // <<<<<<<<<<<<<<<<<<<< 这里调用：  下载热更新资源包，准备热更新
+                await BundleHelper.DownloadBundle(); // <<<<<<<<<<<<<<<<<<<< 这里调用：  下载热更新资源包，准备热更新
+                Game.Hotfix.LoadHotfixAssembly();    // 加载热更新程序集
                 // 加载配置
                 Game.Scene.GetComponent<ResourcesComponent>().LoadBundle("config.unity3d");
                 Game.Scene.AddComponent<ConfigComponent>();
                 Game.Scene.GetComponent<ResourcesComponent>().UnloadBundle("config.unity3d");
                 Game.Scene.AddComponent<OpcodeTypeComponent>(); // 发消息的时候就会用到这个
-                Game.Scene.AddComponent<MessageDispatherComponent>(); // 消息分发器
+                Game.Scene.AddComponent<MessageDispatcherComponent>(); // 消息分发器
                 Game.Hotfix.GotoHotfix();
-                Game.EventSystem.Run(EventIdType.TestHotfixSubscribMonoEvent, "TestHotfixSubscribMonoEvent");
+                Game.EventSystem.Run(EventIdType.TestHotfixSubscribeMonoEvent, "TestHotfixSubscribeMonoEvent");
             }
             catch (Exception e) {
                 Log.Error(e);

@@ -83,10 +83,10 @@ namespace App {
                         Game.Scene.AddComponent<UnitComponent>();
                         // PS：如果启动闪退有可能是服务器配置文件没有填数据库配置，请正确填写
                         // 这里需要将DBComponent的Awake注释去掉才能连接MongoDB
-                        Game.Scene.AddComponent<DBComponent>(); // 这个，就成为服务器端的一个重点，但是是最简单的重点，因为相比其它，它最容易
+                        Game.Scene.AddComponent<DBComponent>(); // 数据库操作：主要是包装成异步任务
                         // 这里需要加上DBCacheComponent才能操作MongoDB
-                        Game.Scene.AddComponent<DBCacheComponent>();
-                        Game.Scene.AddComponent<DBProxyComponent>();
+                        Game.Scene.AddComponent<DBCacheComponent>(); // 数据库缓存：
+                        Game.Scene.AddComponent<DBProxyComponent>(); // 代理
                         Game.Scene.AddComponent<LocationComponent>();
                         Game.Scene.AddComponent<ActorMessageDispatherComponent>();
                         Game.Scene.AddComponent<NetInnerComponent, string>(innerConfig.Address);

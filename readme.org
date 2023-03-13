@@ -131,10 +131,75 @@ namespace ETHotfix {
 - 去找和实现简单的服务器项目，操纵MongoDB数据库
 - 除了自己的电脑安装有MongoDB数据库之外，服务器项目中因为要连接操纵电脑上数据库，可能还需要狠多插件的安装与配置，连接字符串，什么MongoDBClient之类的。这些细节就只能找到一个小参考项目，自己试着连接，出错了再一一更正自己可能存在的错误，要真正能够把项目连通运行得起来，才算真的解决问题
 - 
-* T框架-19 ET框架账号中心服逻辑编写（1）
+* ET框架-19 ET框架账号中心服逻辑编写（1）
 - https://blog.csdn.net/m0_48781656/article/details/124899665?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-124899665-blog-123592622.pc_relevant_multi_platform_whitelistv3&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-124899665-blog-123592622.pc_relevant_multi_platform_whitelistv3&utm_relevant_index=2
 - 现在，对ET 框架里，热更新层，不变层的大的框架层次，稍微开始有点儿概念。还需要再多理一理。现在觉得，只要自己感兴趣，想要找的逻辑都能够找得出来。只是还需要多运行几遍帮助理解消化。
 - 但是现在什么都有了，应该能够很好地实现 ET 的头加自己项目的主体部分了。客户端的逻辑基本都懂了，服务器端需要明天上午再看一下
-- 再多明天上午几个小时，应该基本上差不多了。
 - 只是仍需要考虑，将来如何自己写个多人小游戏？
+* ET 框架登录流程
+- 1.服务器由于在启动时就添加了NetOuterComponent组件，默认状态下使用Tcp协议，组件启动时，指定了自己的消息解析器为ProtobufPacker，消息派发器为OuterMessageDispatcher。
+- 2.由于NetOuterComponent继承了NetworkComponent，然后在awake里，调用了NetworkComponent的Awake方法。
+- 3.实例化一个TService，并监听启动端口，绑定OnAccept。
+- 4.当客户端的协议通过端口与IP发送C2R_Login协议时，TService监听到一个新的连接，在底层建立一个TChannel（内部封装了socket）与之关联，回调OnAccept。
+- 5.OnAccept回调新建一个Session，并将建立的TChannel与这个Session关联起来，并启动Session，内部会调用TChannel的Socket启动循环获取数据。
+- 6.底层Socket获取数据会通知TChannel进行处理，进而将处理好的流数据回给Session的OnRead进行序列化，协议号解析等操作。
+- 7.消息类型为IRequest，所以直接交给OuterMessageDispatcher协议消息转发器进行处理。
+- 8.OuterMessageDispatcher发现是非Actor消息，调用MessageDispatcherComponent组件直接对消息进行处理。
+- 9.由于C2R_LoginHandler类之前就已经在MessageDispatcherComponent注册好，所以C2R_Login消息直接交给他处理。
+- 10.首先应该根据数据库进行帐号密码验证（这一步ET在DEMO中省略了），然后根据配置，拿到一个随机的Gate服务的端口与地址，通过内网组件NetInnerComponent拿到一个通向该地址与端口的Session。然后Reaml模块向Gate模块发送一个R2G_GetLoginKey，为客户端请求一个唯一Key当作连接GATE时的鉴权，这里使用了异步await。 *注：在ALLSERVER模式下，没有区分Reaml模块与Gate模块，但实际流程是一样的。*
+- 11.身为Gate服务模块的NetInnerComponent会监听自身提供的端口，同样的Session会将消息解析好之后发给NetInnerComponent的MessageDispatcher（即InnerMessageDispatcher）进行处理。
+- 12.InnerMessageDispatcher发现R2G_GetLoginKey是一个普通IRequest消息，因此直接交给MessageDispatcherComponent的Handle进行处理。
+- 13.同样的R2G_GetLoginKeyHandler类也注册好了，直接到R2G_GetLoginKeyHandler的Handle方法中，由于R2G_GetLoginKeyHandler继承自AMRpcHandler，在AMRpcHandler中，构造了一个Reply函数传给Run方法，同时也将Response实例化(这里是G2R_GetLoginKey类实例)传给Run。
+- 14.R2G_GetLoginKeyHandler实现了Run方法，Run方法处理R2G_GetLoginKey。他会随机一个64位的数放入到G2R_GetLoginKey的返回数据中，并调用Reply。
+- 14.Reply内部会调用NetInnerComponent一路传过来的Session进行Session的Reply方法调用，直接将G2R_GetLoginKey发送回去。
+- 15.Reaml与Gate连接的Session收到了数据，由于是G2R_GetLoginKey是IResponse类协议，所以不走MessageDispatcher转发了，直接走之前发送时注册的回调函数处理
+- 16.回调函数内部是直接将异步TCS设置SetResult，来唤醒回调，这样一步步向上唤醒最终回到第10步中的await处。
+- 17.可以看到C2R_LoginHandler也是继承自AMRpcHandler，所以再AMRpcHandler内也封装了一个reply回调，以及一个R2C_Login实例传给C2R_LoginHandler的Run,现在回到await处。
+- 18.通过配置拿到Gate服务模块的外网OuterConfig的Address2，以及上面回来的Key，传给response，调用reply通过session将消息发出去。
+- 19.同样的方式，客户端收到一个IResponse，调用之前Call发送数据时注册好的回调，回调内部设置tcs.SetResult,唤醒异步方法。从而回到客户端发送请求的await处。
+- 20.客户端拿到请求后，通过发来的Address新建一个与Gate的连接，然后发送C2G_LoginGate
+- 21.Gate服务收到协议后，通过一系列底层转发，周转到C2G_LoginGateHandler类进行处理。
+- 22.验证成功后，Gate为每个玩家新建一个Player实体与之对应，并交给PlayerComponent进行管理，同时将与之关联的Session上挂载SessionPlayerComponent，将实体Player与关联的Session关联起来，最后为关联的Session绑定一个MailBoxComponent。这样Gate的内网组件就能将Actor消息转到这个Session进行处理时，可以直接当entity为这个session进行转发即可，注意Player基类为ComponentWithId，所以Player的ID即为他的InstanceId。同时将这个ID发回给客户端，当作唯一ID来使用（猜测是在Gate上的实体，不会发生转移的原因）。
+- 自此，客户端已经完整的登录到Gate，后续客户端的通信全部与GATE进行通信，Gate对客户端协议进行转发，收到其他服务传过来的Actor消息，也能转发到对应的客户端Session进行处理。
+- 用一个图来表达的话，就成为下面的样子：也是网友总结的： 
+  
+[[./pic/readme_20230219_104114.png]]
+* 与其他服务模块通信基础（以Map服为例）
+- 客户端想要进入其他服务模块，首先都会再该服务上创建或者移动一个实体进去。
+- 这里以与Map服通信为例。
+  - 1.客户端向Gate发送一条C2G_EnterMap协议，GATE收到服务的细节这里就不多说一遍了，由于C2G_EnterMap是IRequest，所以最终由C2G_EnterMapHandler类进行处理。
+  - 2.通过与之关联的Session上SessionPlayerComponent，能拿到在Gate上的Player信息。然后再通过配置拿到一个Map服务的地址，通过NetInnerComponent在Gate上构建一个与选好的Map服务进行通信的Session。
+  - 3.向这个Session发送一条G2M_CreateUnit协议，将Gate上的player实体ID，session的InstanceId都发送过去。
+  - 4.经过底层处理后，由G2M_CreateUnitHandler类处理，首先创建一个Unit实体， *与在Gate上创建Player实体不同，Player的ID赋值为组件的InstanceID，而在Map上的Unit实体，通过IdGenerater.GenerateId()方法生产一个唯一ID作为实体的Id。*
+  - 5.给Unit上添加移动，寻路组件，并给一个初始化的位置，并为其添加一个MailBoxComponent代表这个unit为一个Actor。由于在Map上的Unit会发生转移到其他服务模块上的可能，所以需要通过MailBoxComponent的AddLocation方法，向Location服务模块，注册自己的唯一ID，与自己的InstanceId。
+  - 6.通过NetInnerComponent获取一个与Location服务连接的Session，并发送一个ObjectAddRequest协议，经过一系列处理后，在Location服务上由ObjectAddRequestHandler类处理，调用LocationComponent的Add将ID与InstanceId注册好，然后直接返回。
+  - 7.Map服务上收到Respose,Session唤醒异步，回到第5步，注册好定位服务（Location）后，给Map上的Unit添加一个UnitGateComponent组件，将Gate发过来的Gate与客户端连接的Session实例ID给保存到Unity上。
+  - 8.将这个Unit放入到UnitComponent组件中进行管理。将生成的唯一Unit ID添加到回复的response协议中。
+  - 9.创建一条M2C_CreateUnits协议，查询UnitComponent组件，遍历所有已经存在的Unit,将数据添加到createUnits协议数据中，广播M2C_CreateUnits协议。
+  - 10.M2C_CreateUnits协议类型是IActorMessage，进入MessageHelper，获取所有的Unit,获取到ActorMessageSenderComponent组件。
+  - 11.遍历所有unit,获取unit上UnitGateComponent组件获取连接状态，通过actorLocationSenderComponent以及每个Unit上挂载的unitGateComponent的GateSessionActorId，这个值是创建Unit时，存储的从GATE上与客户端连接的Session的InstanceId。
+  - 12.因为在GATE上的实体不会发生转移，所以他的InstanceId很稳定（个人觉得也可以拿GATE上Player的InstanceId做后续处理），通过InstanceId即可拿到对应生产他的Gate的端口与地址，通过端口与地址，新建一个ActorMessageSender实例。
+  - 13.通过actorMessageSender发送上面的广播协议，通知所有客户端新的实体被增加了。这里实际走的是向Gate发送了一条IActorMessage协议，然后Gate内网组件收到，转给InnerMessageDispatcher处理，再转给mailBoxComponent处理，然后调用到MailboxGateSessionHandler，将协议转发给客户端即可。 *备注：这里有个小处理：iActorMessage.ActorId = 0，不暴露内部参数*
+  - 14.广播通知所有客户端生成了一个新的Unit后，回复一个M2G_CreateUnit。
+  - 15.再次经过一系列处理后，Gate服务收到M2G_CreateUnit，依然是由Session唤醒异步到Gate的C2G_EnterMapHandler的创建请求处。
+  - 16.将创建好的UnitId即Map上的Unit这个唯一ID（注：与InstanceId不同，他是在Location中绑定过的），绑定到Gate上Player的UnitId上，同时赋值给G2C_EnterMap协议中，发回给客户端。这样后面Gate进行双向转发时，都能通过这个UnitId来进行。
+- 自此，创建好Map上Unit，绑定了UnitId，在Location上注册了Map上的Unit，便于发送ActorLocation协议
+  
+[[./pic/readme_20230219_103732.png]]
+* 与其他服务模块通信Actor（以Map服为例）
+- 现在客户端已经保有Map上Unit的唯一ID，Gate上Player的实例ID，同时Gate上也保有这两者，而Map上的Unit身上保有Unit的唯一ID，还有Gate与客户端连接的Session的实例ID。
+  - 1.客户端发送C2M_TestActorRequest协议，Gate收到此消息，中转到OuterMessageDispatcher派发器的actorLocationRequest消息处理。
+  - 2.通过ActorLocationSenderComponent以Player的unitId为Key拿到一个ActorLocationSender，内部包含访问Location服务器拿到unitId对应的最新InstanceID等操作。
+  - 3.通过actorLocationSender转发C2M_TestActorRequest协议给拥有的UnitID对应实体Unit的Map服务。
+  - 4.Map服务通过内网组件，一路转到InnerMessageDispatcher上，然后通过拿到的Unit的InstanceID,找到对应的Entity，获取他身上的MailBoxComponent，然后一步步中转到MailboxMessageDispatcherHandler进行处理。
+  - 4.获取ActorMessageDispatcherComponent处理，最终交由具体的处理类C2M_TestActorRequestHandler进行处理，这里填充好协议内容后，直接返回协议，交由连接的Session发送数据。
+  - 5.然后又经过一层层处理，由Gate上的连接到Map上的Session收到M2C_TestActorResponse，由于它是一个Response，所以走回调，唤醒异步，回到Gate的OuterMessageDispatcher中的actorLocationRequest处理，得到回复的消息：IResponse response = await actorLocationSender.Call(actorLocationRequest);，Actor消息已经转发成功并拿到回复了。
+  - 6.由Gate的OuterMessageDispatcher直接调用与客户端连接的Session进行Reply，将由Map发来的M2C_TestActorResponse数据发给客户端。
+  - 7.客户端收到M2C_TestActorResponse，老一套，它是一个Response，唤醒异步，回到客户端，发送C2M_TestActorRequest的地方：M2C_TestActorResponse response = (M2C_TestActorResponse)await SessionComponent.Instance.Session.Call( new C2M_TestActorRequest() { Info = "actor rpc request" });
+- 自此，一整个完整的Actor消息就流转完毕了。
+下图是客户端派发一个移动的Actor，与上面的测试Actor差不多。
+
+[[./pic/readme_20230219_102755.png]]
+- 这个游戏在自己的台式机上打过好几遍，大致的游戏过程是清楚的。想要把几个主要过程步骤和按钮的点击事件的回调大致再扫一遍。 *如果到时真的想要快速改装成一个四个人，与对家一起对战另两人的双扣升级游戏，该要如何快速改装？* 今天晚上用1.5 小时快速再熟悉一下过程原理。
+
 - 爱亲爱的表哥，活宝妹一定要嫁的亲爱的表哥！！！，爱生活。活宝妹一定要嫁给亲爱的表哥。爱亲爱的表哥，活宝妹一定要嫁的亲爱的表哥！！！爱生活！！！
