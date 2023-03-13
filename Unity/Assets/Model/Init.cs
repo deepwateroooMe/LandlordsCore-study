@@ -36,9 +36,10 @@ namespace ETModel {
                 Game.Scene.AddComponent<ConfigComponent>();
                 Game.Scene.GetComponent<ResourcesComponent>().UnloadBundle("config.unity3d");
                 Game.Scene.AddComponent<OpcodeTypeComponent>(); // 发消息的时候就会用到这个
-                Game.Scene.AddComponent<MessageDispatcherComponent>(); // 消息分发器
-                Game.Hotfix.GotoHotfix();
-                Game.EventSystem.Run(EventIdType.TestHotfixSubscribeMonoEvent, "TestHotfixSubscribeMonoEvent");
+                Game.Scene.AddComponent<MessageDispatherComponent>(); // 消息分发器
+                Game.Hotfix.GotoHotfix(); // 这里负责：热更新程序域的初始化配置，相关适配加载等
+// EventIdType: 这个类里，定义了程序域相关一些事件
+                Game.EventSystem.Run(EventIdType.TestHotfixSubscribMonoEvent, "TestHotfixSubscribeMonoEvent");
             }
             catch (Exception e) {
                 Log.Error(e);

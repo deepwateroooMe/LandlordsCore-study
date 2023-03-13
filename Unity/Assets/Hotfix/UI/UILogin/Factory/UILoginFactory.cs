@@ -22,8 +22,9 @@ namespace ETHotfix {
                 return null;
             }
         }
-        public void Remove(strine {
+        public void Remove(string type) {
                 ETModel.Game.Scene.GetComponent<ResourcesComponent>().UnloadBundle($"{type}.unity3d");
         }
     }
 }
+

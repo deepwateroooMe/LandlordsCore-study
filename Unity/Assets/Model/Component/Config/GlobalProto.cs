@@ -18,7 +18,9 @@
 #else
             url += "PC/";
 #endif
-            Log.Debug(url);
+            Log.Debug(url); // 这个消息不好，不知道打印的是什么
+            
+// 这个客户端，存在严重的读写延迟，需要优化。【亲爱的表哥，活宝妹一定要嫁的亲爱的表哥！！！】          
             return url;
         }
     }

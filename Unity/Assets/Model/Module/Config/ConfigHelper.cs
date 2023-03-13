@@ -18,7 +18,7 @@ namespace ETModel {
         
         public static string GetGlobal() {
             try {
-                GameObject config = (GameObject)ResourcesHelper.Load("KV"); // 不明白，这里说的是什么意思  KV  。。。
+                GameObject config = (GameObject)ResourcesHelper.Load("KV"); // 这里应该，也是一个资源包的名字，叫KV
                 string configStr = config.Get<TextAsset>("GlobalProto").text;
                 return configStr;
             }

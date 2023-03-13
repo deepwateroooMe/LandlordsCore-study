@@ -6,9 +6,9 @@ using ILRuntime.Runtime.Intepreter;
 
 namespace ETModel {
 
-    // 用于async await适配:  这个好强大
+    // 协程适配器？或是如Collections.List IIterator 的适配器？名字起得狠强大，但仍是普通Iterator 或是协程适配器呀
     [ILAdapter]
-    public class IAsyncStateMachineClassInheritanceAdaptor : CrossBindingAdaptor { // 异步状态机类 继承 适配器 ?
+    public class IAsyncStateMachineClassInheritanceAdaptor : CrossBindingAdaptor { 
         public override Type BaseCLRType {
             get {
                 return typeof (IAsyncStateMachine);
@@ -29,7 +29,7 @@ namespace ETModel {
             private ILRuntime.Runtime.Enviorment.AppDomain appDomain;
             private IMethod mMoveNext;
             private IMethod mSetStateMachine;
-            private readonly object[] param1 = new object[1];
+            private readonly object[] param1 = new object[1]; // 这个是为减少GC 的【这里好像并没有真正用到它，找个真正使用它的地方，再看一下】
 
             public IAsyncStateMachineAdaptor() {
             }

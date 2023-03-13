@@ -24,7 +24,7 @@ namespace ETModel {
 #if ILRuntime
             ILHelper.InitILRuntime(this.appDomain); // 这个方法里作：ILRuntime热更新的必要的加载
 #endif
-            this.start.Run();
+            this.start.Run(); // <<<<<<<<<<<<<<<<<<<< 
         }
 
         public List<Type> GetHotfixTypes() {
@@ -49,11 +49,11 @@ namespace ETModel {
             GameObject code = (GameObject)Game.Scene.GetComponent<ResourcesComponent>().GetAsset("code.unity3d", "Code");
             byte[] assBytes = code.Get<TextAsset>("Hotfix.dll").bytes;
             byte[] mdbBytes = code.Get<TextAsset>("Hotfix.pdb").bytes;
-            using (MemoryStream fs = new MemoryStream(assBytes))
+            using (MemoryStream fs = new MemoryStream(assBytes)) // 加载热更新的程序集
                 using (MemoryStream p = new MemoryStream(mdbBytes)) {
                     this.appDomain.LoadAssembly(fs, p, new Mono.Cecil.Pdb.PdbReaderProvider());
                 }
-            this.start = new ILStaticMethod(this.appDomain, "ETHotfix.Init", "Start", 0);
+            this.start = new ILStaticMethod(this.appDomain, "ETHotfix.Init", "Start", 0); // 通过入口方法，进入到热更新的程序域里去
 #else
             Log.Debug($"当前使用的是Mono模式");
             GameObject code = (GameObject)Game.Scene.GetComponent<ResourcesComponent>().GetAsset("code.unity3d", "Code");

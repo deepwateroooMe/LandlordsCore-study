@@ -36,7 +36,8 @@ namespace ETModel {
                     continue;
                 }
                 this.opcodeTypes.Add(messageAttribute.Opcode, type); // 真实的 type 类型
-                this.typeMessages.Add(messageAttribute.Opcode, Activator.CreateInstance(type)); // 程序集？第一次加载的时候，不得不创建相应消息的新的实例
+// 程序集？第一次加载的时候，不得不创建相应消息的新的实例【这些实例都缓存这里，待用】
+                this.typeMessages.Add(messageAttribute.Opcode, Activator.CreateInstance(type)); 
             }
         }
         public ushort GetOpcode(Type type) {
@@ -50,9 +51,9 @@ namespace ETModel {
         public object GetInstance(ushort opcode) {
 #if SERVER // 总之，是服务器，就不需要什么消息池
             Type type = this.GetType(opcode);
-            return Activator.CreateInstance(type);
+            return Activator.CreateInstance(type); // 这里是拿到这个 opcode 对应的类型，就地实例化一个返回去
 #else // 其它的，就是需要消息池的  ？
-            return this.typeMessages[opcode]; // 这里取现的
+            return this.typeMessages[opcode]; // 这里取现的，前面初始化加载的时候，已经实例化好了，可以随时拿来用的
 #endif
         }
         public override void Dispose() {

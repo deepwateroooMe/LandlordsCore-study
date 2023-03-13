@@ -14,7 +14,7 @@ namespace ETModel {
         public static UnitComponent Instance { get; private set; }
         public Unit MyUnit;
 
-        private readonly Dictionary<long, Unit> idUnits = new Dictionary<long, Unit>();
+        private readonly Dictionary<long, Unit> idUnits = new Dictionary<long, Unit>(); // 作为一个管理者，管理好好多个。单例模式
 
         public void Awake() {
             Instance = this;

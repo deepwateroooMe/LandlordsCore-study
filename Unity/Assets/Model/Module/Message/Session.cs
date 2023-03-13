@@ -129,8 +129,7 @@ namespace ETModel {
                 
                 object instance = opcodeTypeComponent.GetInstance(opcode); // 特定类型的消息实例
                 // 这就是，内存流上读消息了，速度应该是很快。主要是如果是服务器间内网消息的话，就直接转发，不用再反序列化，又再序列化才发送了。它说这样客户端不能存消息来减少GC 来着？
-                message = this.Network.MessagePacker.DeserializeFrom(instance, memoryStream); // 利用消息封装体里的反序列化工具将内存流中的消息反序列化到消息实例里去
-f                
+                message = this.Network.MessagePacker.DeserializeFrom(instance, memoryStream); // 利用消息封装体里的反序列化工具将内存流中的消息反序列化到消息实例里去                
                 if (OpcodeHelper.IsNeedDebugLogMessage(opcode)) {
                     Log.Msg(message);
                 }
