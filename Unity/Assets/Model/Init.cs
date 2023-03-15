@@ -5,6 +5,7 @@ using Google.Protobuf;
 using UnityEngine;
 
 namespace ETModel {
+    // 客户端的起始程序
     public class Init : MonoBehaviour {
 
         private async void Start() {
