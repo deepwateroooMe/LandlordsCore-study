@@ -11,16 +11,16 @@ namespace ETModel {
             self.Awake();
         }
     }
-
+    // 这是一个服务器的管理器：主要作用，服务器保活，检测到哪个服务器下线宕机，就把它重启拉活
     public class AppManagerComponent: Component {
         private readonly Dictionary<int, Process> processes = new Dictionary<int, Process>();
 
         public void Awake() {
             string[] ips = NetHelper.GetAddressIPs();
-            StartConfig[] startConfigs = StartConfigComponent.Instance.GetAll();
+            StartConfig[] startConfigs = StartConfigComponent.Instance.GetAll(); // 拿到配置中所有的服务器进程配置
             
             foreach (StartConfig startConfig in startConfigs) {
-                Game.Scene.GetComponent<TimerComponent>().WaitAsync(100); // 间隔0.1秒
+                Game.Scene.GetComponent<TimerComponent>().WaitAsync(100); // 间隔0.1秒，服务器向当前服务器管理器的心跳消息 ?
                 
                 if (!ips.Contains(startConfig.ServerIP) && startConfig.ServerIP != "*") {
                     continue;

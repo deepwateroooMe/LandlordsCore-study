@@ -23,8 +23,8 @@ namespace ETModel {
             }
             base.Dispose();
             var t = this.Tcs;
-            this.Tcs = null; // 置空
-            t?.SetResult(new ActorMessageInfo()); // 设置结果
+            this.Tcs = null; // 置空，当前 ActorMessageInfo 才可以回收
+            t?.SetResult(new ActorMessageInfo()); // 把当前最新最后任务的结果返回回去
         }
     }
 }

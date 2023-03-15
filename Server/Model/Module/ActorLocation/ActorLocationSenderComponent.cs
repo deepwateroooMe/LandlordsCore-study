@@ -3,6 +3,7 @@ using System.Collections.Generic;
 namespace ETModel {
     // 前面说过，知道对方的地址，就可以给对方发消息
     // 那么这个组件的意思是说：作为MessageDispatcher 的一个组件，帮助统一管理不同会话框的许多发送端 ActorLocationSender 信息
+    // 这里把：与位置服务器【是请求定位 ActorId 所在的服务器的位置的吗？】，可能存在的关系想清楚
     public class ActorLocationSenderComponent: Component {
         // 本地缓存 
         public readonly Dictionary<long, ActorLocationSender> ActorLocationSenders = new Dictionary<long, ActorLocationSender>();

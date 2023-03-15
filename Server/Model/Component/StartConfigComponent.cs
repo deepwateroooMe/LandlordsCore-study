@@ -15,7 +15,7 @@ namespace ETModel {
     public class StartConfigComponent : Component {
         public static StartConfigComponent Instance { get; private set; }
         
-        private Dictionary<int, StartConfig> configDict;
+        private Dictionary<int, StartConfig> configDict; // 所有类型的
         private Dictionary<int, IPEndPoint> innerAddressDict = new Dictionary<int, IPEndPoint>();
 
         public StartConfig StartConfig { get; private set; }
@@ -24,14 +24,14 @@ namespace ETModel {
         public StartConfig LocationConfig { get; private set; }
         public StartConfig MatchConfig { get; private set; } // 应该是某种同步机制：类似 MongoDB 里的数据同步之类的？但不指一个服务器内，更可能是多个不同服务器之间的同步？
 
-        public List<StartConfig> MapConfigs { get; private set; } // 这两种，可能都不止一个，可以有狠多个
-        public List<StartConfig> GateConfigs { get; private set; }
+        public List<StartConfig> MapConfigs { get; private set; } // 地图类型
+        public List<StartConfig> GateConfigs { get; private set; } // 网关类型的
 
         public void Awake(string path, int appId) {
             Instance = this;
             
             this.configDict = new Dictionary<int, StartConfig>();
-            this.MapConfigs = new List<StartConfig>();
+            this.MapConfigs = new List<StartConfig>(); // 地图类型的
             this.GateConfigs = new List<StartConfig>();
             string[] ss = File.ReadAllText(path).Split('\n');
             foreach (string s in ss) {
@@ -40,7 +40,7 @@ namespace ETModel {
                     continue;
                 }
                 try {
-                    StartConfig startConfig = MongoHelper.FromJson<StartConfig>(s2);
+                    StartConfig startConfig = MongoHelper.FromJson<StartConfig>(s2); // 根据每一行的字符串，解析成这个起始配置类
                     this.configDict.Add(startConfig.AppId, startConfig);
                     InnerConfig innerConfig = startConfig.GetComponent<InnerConfig>();
                     if (innerConfig != null) {
@@ -59,9 +59,9 @@ namespace ETModel {
                         this.MatchConfig = startConfig;
                     }
                     if (startConfig.AppType.Is(AppType.Map)) {
-                        this.MapConfigs.Add(startConfig);
+                        this.MapConfigs.Add(startConfig); // 这里说是，是专门负责统计管理 AppType.Map 类型的
                     }
-                    if (startConfig.AppType.Is(AppType.Gate)) {
+                    if (startConfig.AppType.Is(AppType.Gate)) { // 同样类似的，管理网关类型的
                         this.GateConfigs.Add(startConfig);
                     }
                 }

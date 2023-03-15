@@ -1,9 +1,9 @@
 ﻿ using System.Linq;
 using System.Collections.Generic;
 namespace ETModel {
-
     // 匹配对象管理组件
-    public class MatcherComponent : Component { // 这里是，它管理不止一个房间的吗？
+    public class MatcherComponent : Component { // 这里是，它管理不止一个玩家，它管理【可能同一个登录注册服下】所有想要玩的玩家
+
         private readonly Dictionary<long, Matcher> matchers = new Dictionary<long, Matcher>();
         // 匹配对象数量
         public int Count { get { return matchers.Count; } }

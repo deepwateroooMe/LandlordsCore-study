@@ -6,8 +6,9 @@ namespace ETModel {
 
 // 中央邮政，或是位置情报局：比较好懂，只是下面找个定义看下
     public abstract class LocationTask: Component {
-        public abstract void Run(); // 找具体的实现定义
+        public abstract void Run(); // 找具体的实现定义: 下面的， LocationQueryTask 等
     }
+    
     [ObjectSystem]
     public class LocationQueryTaskAwakeSystem : AwakeSystem<LocationQueryTask, long> {
         public override void Awake(LocationQueryTask self, long key) {
@@ -15,6 +16,7 @@ namespace ETModel {
             self.Tcs = new TaskCompletionSource<long>();
         }
     }
+    
     public sealed class LocationQueryTask : LocationTask {
         public long Key;
         public TaskCompletionSource<long> Tcs;
@@ -36,9 +38,9 @@ namespace ETModel {
     }
     // 位置组件：统管所有注册过的玩家位置等，中央邮政系统，任何玩家的搬移，向这里汇报， single.point.of.Truth
     public class LocationComponent : Component {
-        private readonly Dictionary<long, long> locations = new Dictionary<long, long>();
-        private readonly Dictionary<long, long> lockDict = new Dictionary<long, long>();
-        private readonly Dictionary<long, Queue<LocationTask>> taskQueues = new Dictionary<long, Queue<LocationTask>>();
+        private readonly Dictionary<long, long> locations = new Dictionary<long, long>(); // 全局管理的：最新状态位置字典，实时更新
+        private readonly Dictionary<long, long> lockDict = new Dictionary<long, long>();  // 搬迁中：锁定状态管理
+        private readonly Dictionary<long, Queue<LocationTask>> taskQueues = new Dictionary<long, Queue<LocationTask>>(); // 搬迁中：回调管理，待搬迁好了会回调
 
         public void Add(long key, long instanceId) {
             this.locations[key] = instanceId;
@@ -88,10 +90,10 @@ namespace ETModel {
             }
             Log.Info($"location unlock key: {key} oldInstanceId: {oldInstanceId} new: {instanceId}");
             this.locations[key] = instanceId; // 更新到统计库里
-            this.UnLock(key);
+            this.UnLock(key); // 解锁当前的 Key: 执行相关必要的回调【若是有这个 Key 相关的任务在等待】
         }
         private void UnLock(long key) { // 就是执行，先前搬家过程中注册过的异步索求位置消息的回复消息
-            this.lockDict.Remove(key);
+            this.lockDict.Remove(key); // 首行，从锁定倦态解锁
             if (!this.taskQueues.TryGetValue(key, out Queue<LocationTask> tasks)) {
                 return;
             }
@@ -100,7 +102,7 @@ namespace ETModel {
                     this.taskQueues.Remove(key);
                     return;
                 }
-                if (this.lockDict.ContainsKey(key)) { // 不知道这是什么情况
+                if (this.lockDict.ContainsKey(key)) { // 小伙伴搬家【这里更像是，过程中又发生了再一次地搬迁？】，更新场景中，仍处于被锁住的状态，关切的小伙伴们需要等候。。。。。
                     return;
                 }
                 LocationTask task = tasks.Dequeue(); // 一个个地遍历，将任务全部执行完成
@@ -110,16 +112,16 @@ namespace ETModel {
                 catch (Exception e) {
                     Log.Error(e);
                 }
-                task.Dispose();
+                task.Dispose(); // 任务完成了，就回收
             }
         }
         public Task<long> GetAsync(long key) {
             if (!this.lockDict.ContainsKey(key)) { // 先检查：它正在搬迁吗？没有。没有搬迁，不在搬迁，直接返回位置消息
-                this.locations.TryGetValue(key, out long instanceId);
+                this.locations.TryGetValue(key, out long instanceId); // 全局最新状态数据字典中去读
                 Log.Info($"location get key: {key} {instanceId}");
-                return Task.FromResult(instanceId);
+                return Task.FromResult(instanceId); // 直接返回结果
             } // 下面：正在搬迁，就把异步位置请求消息的任务先缓存起来，等它搬迁完成
-            LocationQueryTask task = ComponentFactory.CreateWithParent<LocationQueryTask, long>(this, key);
+            LocationQueryTask task = ComponentFactory.CreateWithParent<LocationQueryTask, long>(this, key); // 被发消息的小伙伴正在搬家，缓存任务，请等待。。。。。
             this.AddTask(key, task);
             return task.Task;
         }

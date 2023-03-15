@@ -3,6 +3,9 @@ using System.Collections.Concurrent;
 using System.Threading;
 
 namespace ETModel {
+
+    // 昨天客户端的Loom 类：不同再次真切地体验了一回？
+    // 当网络异步线程的结果不能同步到主线程时，可能会发生些什么吗？【日志明确显示服务器逻辑处理成功，给客户端分配了网关服，返回了其地址等，但客户端主线和接收不到，因为不曾同步到主线程中去！！！】
     public class OneThreadSynchronizationContext : SynchronizationContext {
 
         public static OneThreadSynchronizationContext Instance { get; } = new OneThreadSynchronizationContext();

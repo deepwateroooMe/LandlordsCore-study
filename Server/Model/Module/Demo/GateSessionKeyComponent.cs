@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 namespace ETModel {
+
     public class GateSessionKeyComponent : Component {
+        // 把与网关服通信的会话框客户端端 Key, 与客户端的登录帐户联系起来。等会话框超时，会话框自动销毁时，需要通知登录帐户自动下线？还是说？。。。。。重新创建当前登录帐户的新的会话框呢？
         private readonly Dictionary<long, string> sessionKey = new Dictionary<long, string>();
         
         public void Add(long key, string account) {

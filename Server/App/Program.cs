@@ -93,8 +93,8 @@ namespace App {
                         Game.Scene.AddComponent<NetOuterComponent, string>(outerConfig.Address);
                         Game.Scene.AddComponent<LocationProxyComponent>();
                         Game.Scene.AddComponent<AppManagerComponent>();
-                        Game.Scene.AddComponent<RealmGateAddressComponent>(); // <<<<<<<<<<<<<<<<<<<< 
-                        Game.Scene.AddComponent<GateSessionKeyComponent>();
+                        Game.Scene.AddComponent<RealmGateAddressComponent>(); 
+                        Game.Scene.AddComponent<GateSessionKeyComponent>();   // <<<<<<<<<<<<<<<<<<<< 
                         Game.Scene.AddComponent<ConfigComponent>();
                         // Game.Scene.AddComponent<ServerFrameComponent>();
                         Game.Scene.AddComponent<PathfindingComponent>();

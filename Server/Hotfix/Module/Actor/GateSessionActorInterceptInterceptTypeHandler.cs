@@ -4,8 +4,9 @@ using ETModel;
 namespace ETHotfix {
 
     // gate session 拦截器，收到的actor消息直接转发给客户端
-    [ActorInterceptTypeHandler(AppType.Gate, ActorInterceptType.GateSession)]
+    [ActorInterceptTypeHandler(AppType.Gate, ActorInterceptType.GateSession)] // 这是 ActorInterceptTypeHandler 标签的一个实际使用的例子
     public class GateSessionActorInterceptInterceptTypeHandler : IActorInterceptTypeHandler {
+
         public async Task Handle(Session session, Entity entity, object actorMessage) {
             try {
                 IActorMessage iActorMessage = actorMessage as IActorMessage;
