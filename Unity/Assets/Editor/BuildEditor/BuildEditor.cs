@@ -23,36 +23,37 @@ namespace ETEditor {
         Development,
         Release,
     }
-
+    // 这个工具类：就是帮助把客户端的热更新资源包文件，一键上传到服务器指定位置的。也就是特殊客户端，可是用来更新服务器资源包文件的上传步骤等
     public class BuildEditor : EditorWindow {
 
         private readonly Dictionary<string, BundleInfo> dictionary = new Dictionary<string, BundleInfo>();
         private PlatformType platformType;
         private bool isBuildExe;
-        private bool isContainAB; // 它同样有个将资源包打包[上载到服务器的过程?],去查一下
+        private bool isContainAB; // 是否将，热更新的资源包也打包进 .exe ？
         private BuildType buildType;
-        private BuildOptions buildOptions = BuildOptions.AllowDebugging | BuildOptions.Development;
+        private BuildOptions buildOptions = BuildOptions.AllowDebugging | BuildOptions.Development; //unity 系统自带的，构建选项，可以组合选择
         private BuildAssetBundleOptions buildAssetBundleOptions = BuildAssetBundleOptions.None;
 
         [MenuItem("Tools/打包工具")] // 把这里面它要做的事情弄清楚:根据打印出来的日志
         public static void ShowWindow() {
             GetWindow(typeof(BuildEditor));
         }
-        private void OnGUI()  {
-            this.platformType = (PlatformType)EditorGUILayout.EnumPopup(platformType);
-            this.isBuildExe = EditorGUILayout.Toggle("是否打包EXE: ", this.isBuildExe);
+        private void OnGUI()  { // 描述点击后的窗口的显示内容：大概有哪几个选择，每个选择如何列表与选择等等，窗体设置 
+            this.platformType = (PlatformType)EditorGUILayout.EnumPopup(platformType);  // 下拉列表框 
+            this.isBuildExe = EditorGUILayout.Toggle("是否打包EXE: ", this.isBuildExe); // 勾选：选，或者不选 
             this.isContainAB = EditorGUILayout.Toggle("是否同将资源打进EXE: ", this.isContainAB);
-            this.buildType = (BuildType)EditorGUILayout.EnumPopup("BuildType: ", this.buildType);
-            
+            this.buildType = (BuildType)EditorGUILayout.EnumPopup("BuildType: ", this.buildType); // 下拉列表框
+    // 配置默认的构建选项：根据构建类型来的
             switch (buildType) {
-            case BuildType.Development:
-                this.buildOptions = BuildOptions.Development | BuildOptions.AutoRunPlayer | BuildOptions.ConnectWithProfiler | BuildOptions.AllowDebugging;
-                break;
-            case BuildType.Release:
-                this.buildOptions = BuildOptions.None;
-                break;
+                case BuildType.Development: // 因为是 Development: 就可以带上一些帮助 debug 的性能分析工具等，方便开发
+                    this.buildOptions = BuildOptions.Development | BuildOptions.AutoRunPlayer | BuildOptions.ConnectWithProfiler | BuildOptions.AllowDebugging;
+                    break;
+                case BuildType.Release: // 发布版本：就需要干净轻量，不参杂任何其它
+                    this.buildOptions = BuildOptions.None;
+                    break;
             }
-            
+// 这里狠好玩：就像是 BitMask 可以一位一位地位或【 | 】每个 bit 位，这里是把上面用户配置容器中的每个选项位或成一个值，用来作为构建参数
+            // 这也是如上窗体中的一个下拉列表框，供用户选择一个或多个构建资源包的选择。这里窗体设置，与读取用户选择的结果放在一行代码里
             this.buildAssetBundleOptions = (BuildAssetBundleOptions)EditorGUILayout.EnumFlagsField("BuildAssetBundleOptions(可多选): ", this.buildAssetBundleOptions);
             if (GUILayout.Button("开始打包")) {
                 if (this.platformType == PlatformType.None) {
