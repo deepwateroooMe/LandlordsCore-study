@@ -65,12 +65,10 @@ namespace ETHotfix {
             changeGameModeButton.gameObject.SetActive(true);
         }
         // 选中卡牌
-        // <param name="card"></param>
         public void SelectCard(Card card) {
             currentSelectCards.Add(card);
         }
         // 取消选中卡牌
-        // <param name="card"></param>
         public void CancelCard(Card card) {
             currentSelectCards.Remove(card);
         }

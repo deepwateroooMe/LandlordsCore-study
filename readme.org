@@ -303,6 +303,10 @@ switch (scene.SceneType)
         break;
 }
 #+END_SRC
+* 项目的理解消化：
+- 前面关于登录注册服与用户帐户管理写入数据库的部分，逻辑已经理解得狠清楚
+- 现将斗地主游戏的游戏逻辑，几个按钮的客户端调用，与服务器端的处理逻辑梳理完。为自己下一个可能的拖拉机双升或是打麻将作点儿必要的准备。 
+- 今天上午希望把上面想要梳理的逻辑追源码再看一遍看完。 
 * 小小小小小服务器：要怎么才能开始动手试图去实现这个小服务器呢？
 ** 如果适配ET框架，现游戏可能哪些模块版块存在问题
 - 我也觉得ET框架可能不太适合我现在的游戏（也就是说，把我的游戏完全适配成ET框架来开发，原本只需要一个小小服务器，完全适配为ET框架，就把问题弄得狠复杂了。。。），
@@ -310,8 +314,6 @@ switch (scene.SceneType)
 - 原因是：我现在还想不通若是用ET框架来实现自己游戏的（服务器与客户端双端都可以热更新），我该如何实现我的方块砖10个按钮上的点击事件，射线检测？它的ILRuntime热更新程序域里对射线检测包的组件安装可能会成为自己狠大的问题，因为还不是狠懂里面的内部原理.这个模块重构的原理是:把射线检测,如果必要一定要,封装成如ET中任何其它可装载卸载的组件一样的装载到某个必要场景上去.ET里有个检测鼠标左右键位置的帮助类,但跟射线检测应该还是相差狠远的.
 - 所以,现在对这个框架,最深的感触是:盲人摸象,摸每部分细节似乎都快清楚了,却无法组装从一个更高的层面上来理解和把握框架设计,无法吃透,在大框架功能模块上犯难,在网上再搜一搜
 - 我可以把两组按钮画面同样做成预设与热更新资源包，射线检测同样会成为可装载可卸载的组件，可是再后面射线检测到的物体逻辑，感觉有点儿复杂了
-- 
-- 
 ** 如果不适配，怎么弄个服务器带数据库等逻辑？
 - 使用部分共享源码的双端（共享的是文件服务器8个项目，MongoDB数据库服务器， Realm注册登录用，网关服，Location服， ETTAsk， RPC消息机制， NetComponent等自己机对陌生需要练习，而自己的服务器也不可缺省的相关功能）
 - 现在知道自己整的不沦不类的服务器所谓的登录，登录的是网页上的认证相关，跟自己真正要实现的游戏里注册登录服保存数据库完全两回事，现在知道了。
@@ -413,56 +415,59 @@ namespace Google.Protobuf {
 - 不知道怎么开始，也不知道怎么创建可以㠌套的像是安卓模块库一样的子工程，就只能把小游戏斗地主复制一份了再从它的基础上来改？！！！
 - 如果简单一点儿开始，我觉得我应该是可以先把简单点儿的MongoDB数据库连接成功，把用户登录相关的逻辑，网络交互的部分，ETTask RPC ACTOR消息等，哪怕是复制，把这部分弄过去
 ** 点击注册后的日志（5  5）
-   #+BEGIN_SRC text
-(Program.cs:31) server start........................ 1 AllServer
-{ "_t" : "C2R_Register_Req", "RpcId" : 1, "Account" : "5", "Password" : "5" }
-{ "_t" : "DBQueryJsonRequest", "RpcId" : 1, "CollectionName" : "AccountInfo", "Json" : "{ \"Account\" : \"5\" }" }
-{ "_t" : "DBQueryJsonRequest", "RpcId" : 1, "CollectionName" : "AccountInfo", "Json" : "{ \"Account\" : \"5\" }" }
-{ "_t" : "DBQueryJsonResponse", "Components" : [], "RpcId" : 1, "Error" : 0, "Message" : null }
-{ "_t" : "DBQueryJsonResponse", "Components" : [], "RpcId" : 1, "Error" : 0, "Message" : null }
-(C2R_Register_ReqHandler.cs:32) 注册新账号：{ "_t" : "AccountInfo", "_id" : NumberLong("391266970697921"), "C" : [], "Account" : "5", "Password" : "5" }
-{ "_t" : "DBSaveRequest", "RpcId" : 2, "NeedCache" : true, "CollectionName" : null, "Component" : { "_t" : "AccountInfo", "_id" : NumberLong("391266970697921"), "C" : [], "Account" : "5", "Password" : "5" } }
-{ "_t" : "DBSaveRequest", "RpcId" : 2, "NeedCache" : true, "CollectionName" : null, "Component" : { "_t" : "AccountInfo", "_id" : NumberLong("391266970697921"), "C" : [], "Account" : "5", "Password" : "5" } }
-{ "_t" : "DBSaveResponse", "RpcId" : 2, "Error" : 0, "Message" : null }
-{ "_t" : "DBSaveResponse", "RpcId" : 2, "Error" : 0, "Message" : null }
-{ "_t" : "DBSaveRequest", "RpcId" : 3, "NeedCache" : false, "CollectionName" : null, "Component" : { "_t" : "UserInfo", "_id" : NumberLong("391266970697921"), "C" : [], "NickName" : "用户5", "Wins" : 0, "Loses" : 0, "Money" : NumberLong(10000) } }
-{ "_t" : "DBSaveRequest", "RpcId" : 3, "NeedCache" : false, "CollectionName" : null, "Component" : { "_t" : "UserInfo", "_id" : NumberLong("391266970697921"), "C" : [], "NickName" : "用户5", "Wins" : 0, "Loses" : 0, "Money" : NumberLong(10000) } }
-{ "_t" : "DBSaveResponse", "RpcId" : 3, "Error" : 0, "Message" : null }
-{ "_t" : "DBSaveResponse", "RpcId" : 3, "Error" : 0, "Message" : null }
-{ "_t" : "R2C_Register_Ack", "RpcId" : 1, "Error" : 0, "Message" : "" }
-{ "_t" : "C2R_Login_Req", "RpcId" : 2, "Account" : "5", "Password" : "5" }
-(C2R_Login_ReqHandler.cs:14) 登录请求：{Account:'5',Password:'5'}
-{ "_t" : "DBQueryJsonRequest", "RpcId" : 4, "CollectionName" : "AccountInfo", "Json" : "{ \"Account\" : \"5\", \"Password\" : \"5\" }" }
-{ "_t" : "DBQueryJsonRequest", "RpcId" : 4, "CollectionName" : "AccountInfo", "Json" : "{ \"Account\" : \"5\", \"Password\" : \"5\" }" }
-{ "_t" : "DBQueryJsonResponse", "Components" : [{ "_t" : "AccountInfo", "_id" : NumberLong("391266970697921"), "C" : [], "Account" : "5", "Password" : "5" }], "RpcId" : 4, "Error" : 0, "Message" : null }
-{ "_t" : "DBQueryJsonResponse", "Components" : [{ "_t" : "AccountInfo", "_id" : NumberLong("391266970697921"), "C" : [], "Account" : "5", "Password" : "5" }], "RpcId" : 4, "Error" : 0, "Message" : null }
-(C2R_Login_ReqHandler.cs:23) 账号登录成功{ "_t" : "AccountInfo", "_id" : NumberLong("391266970697921"), "C" : [], "Account" : "5", "Password" : "5" }
-{ "_t" : "R2G_GetLoginKey_Req", "RpcId" : 5, "UserID" : NumberLong("391266970697921") }
-{ "_t" : "R2G_GetLoginKey_Req", "RpcId" : 5, "UserID" : NumberLong("391266970697921") }
-{ "_t" : "G2R_GetLoginKey_Ack", "RpcId" : 5, "Error" : 0, "Message" : null, "Key" : NumberLong("2874171809693671335") }
-{ "_t" : "G2R_GetLoginKey_Ack", "RpcId" : 5, "Error" : 0, "Message" : null, "Key" : NumberLong("2874171809693671335") }
-{ "_t" : "R2C_Login_Ack", "RpcId" : 2, "Error" : 0, "Message" : "", "Key" : NumberLong("2874171809693671335"), "Address" : "127.0.0.1:10002" }
-{ "_t" : "C2G_LoginGate_Req", "RpcId" : 3, "Key" : NumberLong("2874171809693671335") }
-{ "_t" : "ObjectAddRequest", "RpcId" : 6, "Key" : NumberLong("391266970697944"), "InstanceId" : NumberLong("391266970697944") }
-{ "_t" : "ObjectAddRequest", "RpcId" : 6, "Key" : NumberLong("391266970697944"), "InstanceId" : NumberLong("391266970697944") }
-(LocationComponent.cs:64) location add key: 391266970697944 instanceId: 391266970697944
-{ "_t" : "ObjectAddResponse", "RpcId" : 6, "Error" : 0, "Message" : null }
-{ "_t" : "ObjectAddResponse", "RpcId" : 6, "Error" : 0, "Message" : null }
-{ "_t" : "ObjectAddRequest", "RpcId" : 7, "Key" : NumberLong("391266970697942"), "InstanceId" : NumberLong("391266970697942") }
-{ "_t" : "ObjectAddRequest", "RpcId" : 7, "Key" : NumberLong("391266970697942"), "InstanceId" : NumberLong("391266970697942") }
-(LocationComponent.cs:64) location add key: 391266970697942 instanceId: 391266970697942
-{ "_t" : "ObjectAddResponse", "RpcId" : 7, "Error" : 0, "Message" : null }
-{ "_t" : "ObjectAddResponse", "RpcId" : 7, "Error" : 0, "Message" : null }
-{ "_t" : "G2R_PlayerOnline_Req", "RpcId" : 8, "UserID" : NumberLong("391266970697921"), "GateAppID" : 1 }
-{ "_t" : "G2R_PlayerOnline_Req", "RpcId" : 8, "UserID" : NumberLong("391266970697921"), "GateAppID" : 1 }
-(G2R_PlayerOnline_ReqHandler.cs:21) 玩家391266970697921上线
-{ "_t" : "R2G_PlayerOnline_Ack", "RpcId" : 8, "Error" : 0, "Message" : null }
-{ "_t" : "R2G_PlayerOnline_Ack", "RpcId" : 8, "Error" : 0, "Message" : null }
-{ "_t" : "G2C_LoginGate_Ack", "RpcId" : 3, "Error" : 0, "Message" : "", "PlayerID" : NumberLong("391266970697944"), "UserID" : NumberLong("391266970697921") }
-{ "_t" : "C2G_GetUserInfo_Req", "RpcId" : 4, "UserID" : NumberLong("391266970697921") }
-{ "_t" : "DBQueryRequest", "RpcId" : 9, "_id" : NumberLong("391266970697921"), "CollectionName" : "UserInfo", "NeedCache" : false }
-{ "_t" : "DBQueryRequest", "RpcId" : 9, "_id" : NumberLong("391266970697921"), "CollectionName" : "UserInfo", "NeedCache" : false }
-{ "_t" : "DBQueryResponse", "RpcId" : 9, "Error" : 0, "Message" : null, "Component" : { "_t" : "UserInfo", "_id" : NumberLong("391266970697921"), "C" : [], "NickName" : "用户5", "Wins" : 0, "Loses" : 0, "Money" : NumberLong(10000) } }
-{ "_t" : "DBQueryResponse", "RpcId" : 9, "Error" : 0, "Message" : null, "Component" : { "_t" : "UserInfo", "_id" : NumberLong("391266970697921"), "C" : [], "NickName" : "用户5", "Wins" : 0, "Loses" : 0, "Money" : NumberLong(10000) } }
-{ "_t" : "G2C_GetUserInfo_Ack", "RpcId" : 4, "Error" : 0, "Message" : "", "NickName" : "用户5", "Wins" : 0, "Loses" : 0, "Money" : NumberLong(10000) }
-   #+END_SRC
+- 早上还是想要看些更有难度，自已经前不太懂的源码，或是去理解脑袋不清醒时理解不了的概念。【爱表哥，爱生活！！！】
+[ 亲爱的表哥，活宝妹一定要嫁的亲爱的表哥！！！活宝妹就是一定要嫁给亲爱的表哥！！！】
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[ 亲爱的表哥，活宝妹一定要嫁的亲爱的表哥！！！活宝妹就是一定要嫁给亲爱的表哥！！！】

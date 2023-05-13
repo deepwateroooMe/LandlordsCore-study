@@ -23,7 +23,7 @@ namespace ETHotfix {
             if(uiComponent == null || uiComponent.IsDisposed) {
                 return;
             }
-            UI uiLogin = uiComponent.Create(UIType.LandlordsLogin);
+            UI uiLogin = uiComponent.Create(UIType.LandlordsLogin); // 这里是真的，又创建了一个新的？希望它能够拿到现有的销毁前的，要不然太浪费性能了。要自己确认一下这里
             uiLogin.GetComponent<LandlordsLoginComponent>().SetPrompt("连接断开");
             if (uiComponent.Get(UIType.LandlordsLobby) != null) {
                 uiComponent.Remove(UIType.LandlordsLobby);

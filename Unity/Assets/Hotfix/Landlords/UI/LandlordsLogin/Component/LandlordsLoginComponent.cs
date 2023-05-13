@@ -3,9 +3,7 @@ using ETModel;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Net;
-
 namespace ETHotfix {
-
     [ObjectSystem]
     public class LandlordsLoginComponentAwakeSystem : AwakeSystem<LandlordsLoginComponent> {
         public override void Awake(LandlordsLoginComponent self) {
@@ -54,7 +52,7 @@ namespace ETHotfix {
             if (isLogining || this.IsDisposed) {
                 return;
             }
- // 这里没找到： 游戏中哪里什么地方加载了这个对外网络组件  ？
+ // 这里没找到： 游戏中哪里什么地方加载了这个对外网络组件? 应该是客户端场景最开始的起始公用组件的地方。ETModel.Init.cs 里添加的
             NetOuterComponent netOuterComponent = Game.Scene.ModelScene.GetComponent<NetOuterComponent>();
             // 设置登录中状态
             isLogining = true;
@@ -64,8 +62,8 @@ namespace ETHotfix {
                 IPEndPoint connetEndPoint = NetworkHelper.ToIPEndPoint(GlobalConfigComponent.Instance.GlobalProto.Address);
                 ETModel.Session session = netOuterComponent.Create(connetEndPoint);
                 sessionWrap = ComponentFactory.Create<Session, ETModel.Session>(session);
-                sessionWrap.session.GetComponent<SessionCallbackComponent>().DisposeCallback += s =>  { // 注册回调
-                    if (Game.Scene.GetComponent<UIComponent>()?.Get(UIType.LandlordsLogin) != null) {
+                sessionWrap.session.GetComponent<SessionCallbackComponent>().DisposeCallback += s =>  { // 注册：组件销毁时的回调
+                    if (Game.Scene.GetComponent<UIComponent>()?.Get(UIType.LandlordsLogin) != null) { // 如果登录UI 组件非空
                         prompt.text = "断开连接";
                         isLogining = false;
                     }
@@ -88,17 +86,16 @@ namespace ETHotfix {
                     return;
                 }
                 // 加个讲解链接：https://github.com/Viagi/LandlordsCore/blob/master/Doc/%E7%BD%91%E7%BB%9C%E5%B1%82%E8%AE%BE%E8%AE%A1.md
-                // 可以看到：登录完loginserver，立即登录gateserver，登录完成后又查询了玩家的物品信息，整个流程看起来非常连贯，
+                // 可以看到：登录完loginserver，立即登录gateserver 【这些逻辑都是一样的】，登录完成后又查询了玩家的物品信息【这些只是换汤不换药，连上网关服就可以做很多事】
                 // 假如没有async await，这段代码就得拆成至少4块放到4个函数中。分布式服务器连续rpc调用非常多，没有async await这种协程的语法支持是不可想像的。
 
-                // 创建Gate服务器连接：客户端连接网关 ？？？
+                // 创建Gate服务器连接：客户端连接网关。逻辑是如此设置的，以后客户端只常保留一个与其唯一网关服的会话框，如同活宝妹永远只与亲爱的表哥保持密切对话
                 connetEndPoint = NetworkHelper.ToIPEndPoint(r2C_Login_Ack.Address); // 可是这里不明明写的是Realm 2 Client的吗？怎么是去Gate网关的呢？
                 ETModel.Session gateSession = netOuterComponent.Create(connetEndPoint);
                 Game.Scene.AddComponent<SessionComponent>().Session = ComponentFactory.Create<Session, ETModel.Session>(gateSession); // 重新工厂实例化一个去网关服的会话消息
                 // SessionWeap添加连接断开组件，用于处理客户端连接断开
                 Game.Scene.GetComponent<SessionComponent>().Session.AddComponent<SessionOfflineComponent>();
                 Game.Scene.ModelScene.AddComponent<ETModel.SessionComponent>().Session = gateSession; // 这个会话存放的地方，好像稍有不同 
-                // 登录Gate服务器：这里跟我查找的理论图稍有不同，它说先从注册登录服返回，可以拿到一个Key,再用这个Key去连网关gate服
                 G2C_LoginGate_Ack g2C_LoginGate_Ack = await SessionComponent.Instance.Session.Call(new C2G_LoginGate_Req() { Key = r2C_Login_Ack.Key }) as G2C_LoginGate_Ack;
                 if (g2C_LoginGate_Ack.Error == ErrorCode.ERR_ConnectGateKeyError) {
                     prompt.text = "连接网关服务器超时";
@@ -110,13 +107,13 @@ namespace ETHotfix {
                     isLogining = false;
                     return;
                 }
-                Log.Info("登录成功");
+                Log.Info("登录成功"); // 收到了网关服返回来的确认信息：当前客户端与网关服连接成功
                 // 保存本地玩家
                 User user = ETModel.ComponentFactory.CreateWithId<User, long>(g2C_LoginGate_Ack.PlayerID, g2C_LoginGate_Ack.UserID); // 拿到PlayerID UserID
 // 斗地主客户端的第一个自定义组件ClientComponent 定义了静态唯一实例Instance和User成员LocalPlayer, 在登陆成功后设置改实例为当前玩家                
                 ClientComponent.Instance.LocalPlayer = user;
                 // 跳转到大厅界面
-                Game.Scene.GetComponent<UIComponent>().Create(UIType.LandlordsLobby);
+                Game.Scene.GetComponent<UIComponent>().Create(UIType.LandlordsLobby); // 去找：这个UI 组件的创建，与相关按钮回调过程
                 Game.Scene.GetComponent<UIComponent>().Remove(UIType.LandlordsLogin);
             }
             catch (Exception e) {

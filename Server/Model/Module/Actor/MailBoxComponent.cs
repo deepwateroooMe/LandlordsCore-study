@@ -8,7 +8,7 @@ namespace ETModel {
         public object Message;
     }
 
-    // 挂上这个组件表示该Entity是一个Actor,接收的消息将会队列处理(意思是说，它可以内网服务器意发送消息？)
+    // 挂上这个组件表示该Entity是一个Actor,接收的消息将会队列处理(意思是说，它可以内网服务器发送消息？)
     public class MailBoxComponent: Component {
 
         // 拦截器类型，默认没有拦截器

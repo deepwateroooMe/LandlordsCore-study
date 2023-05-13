@@ -2,40 +2,27 @@
 using ETModel;
 using UnityEditor;
 using UnityEngine;
+namespace ETEditor {
 
-namespace ETEditor
-{
-    public class GlobalProtoEditor: EditorWindow
-    {
+    public class GlobalProtoEditor: EditorWindow { // 看一下：它这个文件服务器的配置到底是如何加载的？
         const string path = @".\Assets\Res\Config\GlobalProto.txt";
 
         private GlobalProto globalProto;
-
         [MenuItem("Tools/全局配置")]
-        public static void ShowWindow()
-        {
+        public static void ShowWindow() {
             GetWindow<GlobalProtoEditor>();
         }
-
-        public void Awake()
-        {
-            if (File.Exists(path))
-            {
+        public void Awake() {
+            if (File.Exists(path)) {
                 this.globalProto = JsonHelper.FromJson<GlobalProto>(File.ReadAllText(path));
-            }
-            else
-            {
+            } else {
                 this.globalProto = new GlobalProto();
             }
         }
-
-        public void OnGUI()
-        {
+        public void OnGUI() {
             this.globalProto.AssetBundleServerUrl = EditorGUILayout.TextField("资源路径:", this.globalProto.AssetBundleServerUrl);
             this.globalProto.Address = EditorGUILayout.TextField("服务器地址:", this.globalProto.Address);
-
-            if (GUILayout.Button("保存"))
-            {
+            if (GUILayout.Button("保存")) {
                 File.WriteAllText(path, JsonHelper.ToJson(this.globalProto));
                 AssetDatabase.Refresh();
             }

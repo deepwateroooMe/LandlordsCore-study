@@ -1,17 +1,12 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+namespace ETModel {
 
-namespace ETModel
-{
-    /// <summary>
-    /// 账号信息
-    /// </summary>
+    // 账号信息
     [BsonIgnoreExtraElements]
-    public class AccountInfo : Entity
-    {
-        //用户名
+    public class AccountInfo : Entity {
+        // 用户名
         public string Account { get; set; }
-
-        //密码
+        // 密码
         public string Password { get; set; }
     }
 }

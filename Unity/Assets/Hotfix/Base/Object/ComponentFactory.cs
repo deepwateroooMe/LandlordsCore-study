@@ -64,7 +64,7 @@ namespace ETHotfix {
             Game.EventSystem.Awake(component);
             return component;
         }
-        public static T Create<T, A>(A a) where T : Component {
+        public static T Create<T, A>(A a) where T : Component { // 这里有一点儿没看懂：父级关系是如何设置出来的？
             T component = Game.ObjectPool.Fetch<T>();
             ComponentWithId componentWithId = component as ComponentWithId;
             if (componentWithId != null) {

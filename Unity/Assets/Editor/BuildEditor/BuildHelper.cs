@@ -8,14 +8,15 @@ namespace ETEditor {
         private const string relativeDirPrefix = "../Release";
         public static string BuildFolder = "../Release/{0}/StreamingAssets/"; // F:\LandlordsCore\Release\PC\StreamingAssets : PC 平台的路径地址
         
-        // [MenuItem("Tools/编译Hotfix")]
-        public static void BuildHotfix() {
+        [MenuItem("Tools/编译Hotfix")] // 这里说是：编译热更新程序集，不是把编译好的程序集打成资源包。所以编译的原理，自己的项目中是 Visual Studio 自动构建代为完成的。这里的要理解一下
+        public static void BuildHotfix() { // 【把这个跳过去：】这里没有看懂，自己的环境也没能配置好。现只能借助 Visual-Studio 来自动化创建
             System.Diagnostics.Process process = new System.Diagnostics.Process();
-            string unityDir = System.Environment.GetEnvironmentVariable("Unity");
+            string unityDir = System.Environment.GetEnvironmentVariable("Unity"); // 这个构建方法自己不熟悉，好像也与自己项目中的实现方式不一样？
             if (string.IsNullOrEmpty(unityDir)) {
                 Log.Error("没有设置Unity环境变量!");
                 return;
             }
+// 需要把用下面这种方式构建的原理弄明白了：但是好像是，有点儿过时了？【先去复查，自己项目中是如何打热更新代码的资源程序包的？】
             process.StartInfo.FileName = $@"{unityDir}\Editor\Data\MonoBleedingEdge\bin\mono.exe";
             process.StartInfo.Arguments = $@"{unityDir}\Editor\Data\MonoBleedingEdge\lib\mono\xbuild\14.0\bin\xbuild.exe .\Hotfix\Unity.Hotfix.csproj";
             process.StartInfo.UseShellExecute = false;
@@ -34,11 +35,11 @@ namespace ETEditor {
             string currentDir = System.Environment.CurrentDirectory;
             string path = Path.Combine(currentDir, @"..\FileServer\");
             System.Diagnostics.Process process = new System.Diagnostics.Process();
-            process.StartInfo.FileName = "FileServer.exe";
+            process.StartInfo.FileName = "FileServer.exe"; // 那么在非 macOS 环境下，这个可执行文件是如何生成的呢？
             process.StartInfo.WorkingDirectory = path;
             process.StartInfo.CreateNoWindow = true;
             process.Start();
-#else
+#else // 它说在 macOS 下，运行这个 FileServer.go 文件来支撑起，这个文件服务器
             string path = System.Environment.CurrentDirectory + "/../FileServer/";
             ("cd " + path + " && go run FileServer.go").Bash(path, true);
 #endif
@@ -114,3 +115,6 @@ namespace ETEditor {
         }
     }
 }
+
+
+

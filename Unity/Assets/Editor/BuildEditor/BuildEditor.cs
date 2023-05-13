@@ -34,7 +34,7 @@ namespace ETEditor {
         private BuildOptions buildOptions = BuildOptions.AllowDebugging | BuildOptions.Development; //unity 系统自带的，构建选项，可以组合选择
         private BuildAssetBundleOptions buildAssetBundleOptions = BuildAssetBundleOptions.None;
 
-        [MenuItem("Tools/打包工具")] // 把这里面它要做的事情弄清楚:根据打印出来的日志
+        [MenuItem("Tools/打包工具")] // 把这里面它要做的事情弄清楚:根据打印出来的日志【这里自带了，打包热更新资源包的步骤过程】
         public static void ShowWindow() {
             GetWindow(typeof(BuildEditor));
         }
