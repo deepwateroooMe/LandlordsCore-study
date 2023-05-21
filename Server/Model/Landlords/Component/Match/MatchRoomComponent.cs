@@ -11,7 +11,6 @@ namespace ETModel {
         public readonly Dictionary<long, Room> gameRooms = new Dictionary<long, Room>();
         // 等待中房间列表
         public readonly Dictionary<long, Room> readyRooms = new Dictionary<long, Room>();
-
         // 空闲房间列表
         public readonly Queue<Room> idleRooms = new Queue<Room>();
 
@@ -25,9 +24,8 @@ namespace ETModel {
         public int IdleRoomCount { get { return idleRooms.Count; } }
 
         public override void Dispose() {
-            if (this.IsDisposed) {
+            if (this.IsDisposed) 
                 return;
-            }
             base.Dispose();
             foreach (var room in this.rooms.Values) {
                 room.Dispose();

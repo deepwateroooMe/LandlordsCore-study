@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 namespace ETModel {
-
     // 房间管理组件
     public class RoomComponent : Component {
-
         private readonly Dictionary<long, Room> rooms = new Dictionary<long, Room>();
         // 添加房间
         public void Add(Room room) {
@@ -22,9 +20,7 @@ namespace ETModel {
             return room;
         }
         public override void Dispose() {
-            if (this.IsDisposed) {
-                return;
-            }
+            if (this.IsDisposed) return;
             base.Dispose();
             foreach (var room in this.rooms.Values) {
                 room.Dispose();

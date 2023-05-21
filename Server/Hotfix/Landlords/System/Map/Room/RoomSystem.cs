@@ -1,6 +1,5 @@
 ﻿using ETModel;
 namespace ETHotfix {
-
     public static class RoomSystem {
         // 添加玩家
         public static void Add(this Room self, Gamer gamer) {
@@ -15,9 +14,8 @@ namespace ETHotfix {
         // 获取玩家
         public static Gamer Get(this Room self, long id) {
             int seatIndex = self.GetGamerSeat(id);
-            if (seatIndex >= 0) {
+            if (seatIndex >= 0) 
                 return self.gamers[seatIndex];
-            }
             return null;
         }
         // 获取所有玩家
@@ -26,9 +24,8 @@ namespace ETHotfix {
         }
         // 获取玩家座位索引
         public static int GetGamerSeat(this Room self, long id) {
-            if (self.seats.TryGetValue(id, out int seatIndex)) {
+            if (self.seats.TryGetValue(id, out int seatIndex)) 
                 return seatIndex;
-            }
             return -1;
         }
         // 移除玩家并返回
@@ -46,19 +43,16 @@ namespace ETHotfix {
         // 获取空座位
         // <returns>返回座位索引，没有空座位时返回-1</returns>
         public static int GetEmptySeat(this Room self) {
-            for (int i = 0; i < self.gamers.Length; i++) {
-                if (self.gamers[i] == null) {
+            for (int i = 0; i < self.gamers.Length; i++) 
+                if (self.gamers[i] == null) 
                     return i;
-                }
-            }
             return -1;
         }
         // 广播消息
         public static void Broadcast(this Room self, IActorMessage message) {
             foreach (Gamer gamer in self.gamers) {
-                if (gamer == null || gamer.isOffline) {
+                if (gamer == null || gamer.isOffline) 
                     continue;
-                }
                 ActorMessageSender actorProxy = gamer.GetComponent<UnitGateComponent>().GetActorMessageSender();
                 actorProxy.Send(message);
             }

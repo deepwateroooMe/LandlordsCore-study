@@ -4,7 +4,6 @@ namespace ETHotfix {
 
     [MessageHandler(AppType.Map)]
     public class MH2MP_CreateRoom_ReqHandler : AMRpcHandler<MH2MP_CreateRoom_Req, MP2MH_CreateRoom_Ack> {
-
         protected override async void Run(Session session, MH2MP_CreateRoom_Req message, Action<MP2MH_CreateRoom_Ack> reply) {
             MP2MH_CreateRoom_Ack response = new MP2MH_CreateRoom_Ack();
             try {

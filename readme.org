@@ -1,473 +1,713 @@
 #+latex_class: cn-article
-#+title: ET框架小游戏--斗地主源码学习
+#+title: ET框架小游戏--斗地主源码学习－－参考来帮助拖拉机重构游戏
 #+author: deepwaterooo
 
-* 几个项目，哪里先后是如何运行的？文件太多，傻傻分不清楚，可是一定会弄清楚的
-** ETModel.Init.cs: 不可热更新,应该是它先起始，再启热更新层的启动文件  
-   #+BEGIN_SRC csharp
-namespace ETModel {
-    public class Init : MonoBehaviour {
-
-        private async void Start() {
-            try { 
-                if (!Application.unityVersion.StartsWith("2017.4")) {
-                    Log.Error($"新人请使用Unity2017.4版本,减少跑demo遇到的问题! 下载地址:\n https:// unity3d.com/cn/unity/qa/lts-releases?_ga=2.227583646.282345691.1536717255-1119432033.1499739574");
-                }
-                SynchronizationContext.SetSynchronizationContext(OneThreadSynchronizationContext.Instance); // 异步线程等的上下文自动同步
-                DontDestroyOnLoad(gameObject);
-                Game.EventSystem.Add(DLLType.Model, typeof(Init).Assembly); // Unity.Model 里面的代码不能热更新，通常将游戏中不会变动的部分放在这个项目里
-                Game.Scene.AddComponent<GlobalConfigComponent>(); // 读取全局配置，不知道是否会触发什么回调
-                Game.Scene.AddComponent<NetOuterComponent>();     // 客户端需要与登录服，网关服通消息，必须挂这个
-                Game.Scene.AddComponent<ResourcesComponent>();
-                Game.Scene.AddComponent<PlayerComponent>();
-                Game.Scene.AddComponent<UnitComponent>();
-                Game.Scene.AddComponent<UIComponent>();
-                // 斗地主客户端自定义全局组件
-                // 用于保存玩家本地数据
-                Game.Scene.AddComponent<ClientComponent>();
-                // 下载ab包
-                await BundleHelper.DownloadBundle();
-                Game.Hotfix.LoadHotfixAssembly();
-                // 加载配置
-                Game.Scene.GetComponent<ResourcesComponent>().LoadBundle("config.unity3d");
-                Game.Scene.AddComponent<ConfigComponent>();
-                Game.Scene.GetComponent<ResourcesComponent>().UnloadBundle("config.unity3d");
-                Game.Scene.AddComponent<OpcodeTypeComponent>();
-                Game.Scene.AddComponent<MessageDispatherComponent>();
-                Game.Hotfix.GotoHotfix();
-                Game.EventSystem.Run(EventIdType.TestHotfixSubscribMonoEvent, "TestHotfixSubscribMonoEvent");
-            }
-            catch (Exception e) {
-                Log.Error(e);
-            }
-        }
-        private void Update() {
-            OneThreadSynchronizationContext.Instance.Update();
-            Game.Hotfix.Update?.Invoke();
-            Game.EventSystem.Update();
-        }
-        private void LateUpdate() {
-            Game.Hotfix.LateUpdate?.Invoke();
-            Game.EventSystem.LateUpdate();
-        }
-        private void OnApplicationQuit() {
-            Game.Hotfix.OnApplicationQuit?.Invoke();
-            Game.Close();
-        }
-    }
-}
-   #+END_SRC
-** ETModel.Hotfix: 
-   #+BEGIN_SRC csharp
-namespace ETModel {
-    public sealed class Hotfix : Object {
-
-#if ILRuntime
-        private ILRuntime.Runtime.Enviorment.AppDomain appDomain;
-#else
-        private Assembly assembly;
-#endif
-        private IStaticMethod start;
-        public Action Update;
-        public Action LateUpdate;
-        public Action OnApplicationQuit;
-
-        public Hotfix() {
-        }
-
-        public void GotoHotfix() {
-#if ILRuntime
-            ILHelper.InitILRuntime(this.appDomain); // 这个方法里作：ILRuntime热更新的必要的加载
-#endif
-            // 在ETModel.Int中，加载Hotfix.dll的程序集，指定的开始函数为ETHotfix.Init.Start方法
-            this.start.Run(); // <<<<<<<<<<<<<<<<<<<< 就是这些细节的地方，跟着跟着就会跟丢，要看下面的地方，有定义
-        }
-
-        public List<Type> GetHotfixTypes() {
-#if ILRuntime
-            if (this.appDomain == null) {
-                return new List<Type>();
-            }
-            return this.appDomain.LoadedTypes.Values.Select(x => x.ReflectionType).ToList();
-#else
-            if (this.assembly == null) {
-                return new List<Type>();
-            }
-            return this.assembly.GetTypes().ToList();
-#endif
-        }
-
-        public void LoadHotfixAssembly() {
-            Game.Scene.GetComponent<ResourcesComponent>().LoadBundle($"code.unity3d");
-#if ILRuntime
-            Log.Debug($"当前使用的是ILRuntime模式");
-            this.appDomain = new ILRuntime.Runtime.Enviorment.AppDomain();
-            GameObject code = (GameObject)Game.Scene.GetComponent<ResourcesComponent>().GetAsset("code.unity3d", "Code");
-            byte[] assBytes = code.Get<TextAsset>("Hotfix.dll").bytes;
-            byte[] mdbBytes = code.Get<TextAsset>("Hotfix.pdb").bytes;
-            using (MemoryStream fs = new MemoryStream(assBytes))
-                using (MemoryStream p = new MemoryStream(mdbBytes)) {
-                    this.appDomain.LoadAssembly(fs, p, new Mono.Cecil.Pdb.PdbReaderProvider());
-                }
-            this.start = new ILStaticMethod(this.appDomain, "ETHotfix.Init", "Start", 0); // <<<<<<<<<< 这里说，起始方法是这么定义的
-#else
-            Log.Debug($"当前使用的是Mono模式");
-            GameObject code = (GameObject)Game.Scene.GetComponent<ResourcesComponent>().GetAsset("code.unity3d", "Code");
-            byte[] assBytes = code.Get<TextAsset>("Hotfix.dll").bytes;
-            byte[] mdbBytes = code.Get<TextAsset>("Hotfix.mdb").bytes;
-            this.assembly = Assembly.Load(assBytes, mdbBytes);
-            Type hotfixInit = this.assembly.GetType("ETHotfix.Init");
-            this.start = new MonoStaticMethod(hotfixInit, "Start");
-#endif
-            Game.Scene.GetComponent<ResourcesComponent>().UnloadBundle($"code.unity3d");
-        }
-    }
-}
-   #+END_SRC
-** ETHotfix.Init.cs：这里就回到了热更新域里的起始配置点
-   #+BEGIN_SRC csharp
-namespace ETHotfix {
-    public static class Init {
-
-        public static void Start() {
-            try {
-#if ILRuntime
-                if (!Define.IsILRuntime) {
-                    Log.Error("mono层是mono模式, 但是Hotfix层是ILRuntime模式");
-                }
-#else
-                if (Define.IsILRuntime) {
-                    Log.Error("mono层是ILRuntime模式, Hotfix层是mono模式");
-                }
-#endif
-                Game.Scene.ModelScene = ETModel.Game.Scene;
-                // 注册热更层回调
-                ETModel.Game.Hotfix.Update = () => { Update(); };
-                ETModel.Game.Hotfix.LateUpdate = () => { LateUpdate(); };
-                ETModel.Game.Hotfix.OnApplicationQuit = () => { OnApplicationQuit(); };
-                
-                Game.Scene.AddComponent<UIComponent>();
-                Game.Scene.AddComponent<OpcodeTypeComponent>();
-                Game.Scene.AddComponent<MessageDispatherComponent>();
-                // 加载热更配置
-                ETModel.Game.Scene.GetComponent<ResourcesComponent>().LoadBundle("config.unity3d");
-                Game.Scene.AddComponent<ConfigComponent>();
-                ETModel.Game.Scene.GetComponent<ResourcesComponent>().UnloadBundle("config.unity3d");
-                UnitConfig unitConfig = (UnitConfig)Game.Scene.GetComponent<ConfigComponent>().Get(typeof(UnitConfig), 1001);
-                Log.Debug($"config {JsonHelper.ToJson(unitConfig)}");
-                // Game.EventSystem.Run(EventIdType.InitSceneStart);
-                Game.EventSystem.Run(EventIdType.LandlordsInitSceneStart); // 这个特定事件是怎么运行的？不是标签系统吗，加载的时候已经扫过了，现在就是去跑这些扫过的标签方法
-            }
-            catch (Exception e) { 
-                Log.Error(e);
-            }
-        }
-        public static void Update() {
-            try {
-                Game.EventSystem.Update();
-            }
-            catch (Exception e) {
-                Log.Error(e);
-            }
-        }
-        public static void LateUpdate() {
-            try {
-                Game.EventSystem.LateUpdate();
-            }
-            catch (Exception e) {
-                Log.Error(e);
-            }
-        }
-        public static void OnApplicationQuit() {
-            Game.Close();
-        }
-    }
-}
-   #+END_SRC
-** ETHotfix.InitSceneStart_CreateLandlordsLogin.cs   
-   #+BEGIN_SRC csharp
-namespace ETHotfix {
-
- // 加载的时候，扫描到的标签系统，这个标签，就对应了这么个事件    
-    [Event(EventIdType.LandlordsInitSceneStart)]
-    public class InitSceneStart_CreateLandlordsLogin : AEvent {
-        public override void Run() {
-            // 创建登录界面
-            UI ui = Game.Scene.GetComponent<UIComponent>().Create(UIType.LandlordsLogin);
-        }
-    }
-}
-   #+END_SRC
-
-* 服务器端的逻辑   
-- 感觉上面的客户端的起始逻辑大致还是能够理得清的
-- 这么无限地看下去,不知道到哪年哪月才能真正看得完,还是得赶快把自己的小服务器给弄起来
-- 那么就集中到自己想要实现的功能点:
-  - 一个热更新资源包的文件服务器,及下载文件的相关逻辑
-  - 注册登录服:Realm
-  - 网关服： Gate
-  - DB服务器：用户信息,或更进一步的,游戏数据数据库服务器
-- 或者弄一个AllServer一个服务器解决一切问题，比较简单一点儿
-- 因为自己的服务器不是网络多人游戏，不涉及折到点儿的UI以及逻辑以及热更新的折分，只处理资源包文件服，登录登出拿取用户数据背个数据库，什么Map地图什么的全不涉及，应该能够简单狠多，可是现在大的框架把据不透，小的知识点还没能理解透，所以过程中应该还会有些曲折波折。  
-- 所以现在今天晚上看服务器端的源码，试图着重把上面与自己关系更为重要的几个问题解决掉：哪些功能模块是必须的，哪些是可以砍砍杀杀砍掉的？
-- 现在看服务器客户端哪一端，都还感觉是盲人摸象，不知道是怎么回事，怎么才能够把具备（ET框架具备吗？）动态热更新能力的服务器端改造成只具备自己想要的功能的减小精悍的小小服务器（我的服务器可以不需要动态热更新能力。只需要我的客户端能够动态热更新资源包就可以了）？
-- 今天晚上把服务器端的源码理一理，就该试着用ET框架的framework来改造成自已的小小的服务器，完成自已游戏的最后最具挑战的部分了。  
-** 框架的整体构总结理解
-** 客户端
-    
-    [[./pic/readme_20230131_220340.png]]
-    |----------------------------+--------------------------------------------------------------------------------------+---|
-    | 配置导出                   | Excel转换为json                                                                      |   |
-    |----------------------------+--------------------------------------------------------------------------------------+---|
-    | web资源服务器              |                                                                                      |   |
-    | Proto消息生成              |                                                                                      |   |
-    | 链接服务器配置             |                                                                                      |   |
-    | 一键打包                   |                                                                                      |   |
-    |----------------------------+--------------------------------------------------------------------------------------+---|
-    | AB包名称设置               | 需要修改Assets/Editor/BuildEditor/BuildEditor.cs下的SetPackingTagAndAssetBundle      |   |
-    |                            | 添加static并在函数上添加MenuItem特性                                                 |   |
-    |----------------------------+--------------------------------------------------------------------------------------+---|
-    | AstarPath                  | A*寻路: 这两个组件我的游戏中都不需要                                                               |   |
-    | recast                     | recast寻路                                                                           |   |
-    |----------------------------+--------------------------------------------------------------------------------------+---|
-    | ilruntime热更新            | 具体资料看https://github.com/Ourpalm/ILRuntime                                       |   |
-    | 组件信息显示               | 方便在inspector窗口观察变量的变化                                                    |   |
-    | ReferenceCollector         | 用于对象绑定，代码中通过key获得对应对象                                              |   |
-    | MongoDB                    | 用于对象序列化和反序列化                                                             |   |
-    | Protobuf                   | 客户端与服务器的消息序列化                                                           |   |
-    |----------------------------+--------------------------------------------------------------------------------------+---|
-    | ETVoid、ETTask             | 协程支持 async和await                                                                |   |
-    | EventSystem                | 事件系统，通过它发送事件，同时承担了所有组件的系统处理，如AwakeSystem，StartSystem等 |   |
-    | Log                        | 日志系统                                                                             |   |
-    | ConfigComponent            | 配置组件，通过读取config.unity3d包里面的配置加载                                     |   |
-    |                            | 配置同时用于客户端和服务器                                                           |   |
-    | TimerComponent             | 时间等待组件                                                                         |   |
-    | NetOuterComponent          | 外网组件，用于创建Session，NetworkComponent链接服务器                                |   |
-    |----------------------------+--------------------------------------------------------------------------------------+---|
-    | ResourcesComponent         | 对AB包的加载和释放，以及包内资源的获取                                               |   |
-    | AssetsBundleLoaderAsync    | AB包异步加载                                                                         |   |
-    | AssetsLoaderAsync          | 包内资源读取                                                                         |   |
-    |----------------------------+--------------------------------------------------------------------------------------+---|
-    | UIComponent                | UGUI组件                                                                             |   |
-    | MessageDispatcherComponent | 消息分发组件                                                                         |   |
-    | UnityWebRequestAsync       | 简陋的http请求                                                                       |   |
-    | NumericWatcherComponent    | 分发数值监听                                                                         |   |
-    |----------------------------+--------------------------------------------------------------------------------------+---|
-    | CoroutineLock              | 协程锁，对协程锁定，例如玩家多次点击了登录按钮                                       |   |
-    |                            | 不应该进行多次登录请求，应锁定该事件等待处理完成                                     |   |
-    |----------------------------+--------------------------------------------------------------------------------------+---|
-** 服务器端的逻辑
-   
-[[./pic/readme_20230131_221134.png]]
-** ET框架的Scene树
-- 在ET框架下，Scene即为场景作为根节点，根节点下可以存放多个实体或组件。但Scenen本质也是实体，所以Scene之间也会有层次关系。
-- 游戏客户端的Scene层次结构
-
-[[./pic/readme_20230201_122307.png]]
-- GameScene
-  - 游戏客户端全局的Scene根节点，用于提供游戏客户端全局且必要的基础功能组件（资源加载管理组件，计时器组件等）
-- ZoneScene
-  - 用于提供玩家全局游戏业务功能逻辑组件（例如基础UI，背包界面等）
-- CurrentScene
-  - 代表玩家当前所在的地图场景，一般用于挂载当前场景相关的组件，切换或释放场景时回收所有实体及组件。
-** 游戏服务端Scene层次结构
-   
-[[./pic/readme_20230201_141859.png]]
-- GameScene
-  - 类似客户端，其用来挂载全局服务端所需的基础功能必备组件
-- ZoneScene
-  - 可以创建多个不同功能的ZoneScene, 每个不同功能的ZoneScene下挂载其应该具有的功能组件，例如网关下的NetKcpComponent，定位服务器的LocationComponent等等，一般通过SceneType的枚举对其进行逻辑分发。
-  - 不同ZoneScene可以存在一个进程上面，也可以每个都ZoneScene运行在一个单独的进程上，不同ZoneScene进程甚至可以分布在服务器集群上，大大提高了运行效率。
-  - Scene可以动态创建和销毁（用于制作副本等临时场景）
-** 创建Scene的一般流程
-- 创建一个未挂载任何组件的Scene对象 Scene scene = EntitySceneFactory.CreateScene(id, instanceId, zone, sceneType, name, parent);
-- 添加服务器下Scene的公共组件mailBox(用于接收Actor消息)，scene.AddComponent<MailBoxComponent, MailboxType>(MailboxType.UnOrderMessageDispatcher);
-- 根据scene.SceneType针对不同服务器添加相应的组件，做相应的逻辑处理。
+* UILobby 匹配按钮的回调
+** 【客户端请求】LandlordsLobbyComponent ==> OnStartMatch()
+- 这个类向服务器发消息前，会先检查用户是否余额不足。
+- 初始化时，因为用户是已经登录时来的，所以会去数据库拿用户的信息
 #+BEGIN_SRC csharp
-switch (scene.SceneType)
-{
-	case SceneType.Realm:
-		scene.AddComponent<NetKcpComponent, IPEndPoint, int>(startSceneConfig.OuterIPPort, SessionStreamDispatcherType.SessionStreamDispatcherServerOuter);
-		break;
- 	case SceneType.Gate:
-        scene.AddComponent<NetKcpComponent, IPEndPoint, int>(startSceneConfig.OuterIPPort, SessionStreamDispatcherType.SessionStreamDispatcherServerOuter);
-        scene.AddComponent<PlayerComponent>();
-        scene.AddComponent<GateSessionKeyComponent>();
-        break;
-   	case SceneType.Map:
-        scene.AddComponent<UnitComponent>();
-        scene.AddComponent<AOIManagerComponent>();
-        break;
-    case SceneType.Location:
-        scene.AddComponent<LocationComponent>();
-        break;
-}
+public class LandlordsLobbyComponent : Component { // 大厅界面组件
+    public void Awake() {
+        Init();
+    }
+    // 开始匹配按钮事件
+    public async void OnStartMatch() { 
+        try {
+            // 发送开始匹配消息
+            C2G_StartMatch_Req c2G_StartMatch_Req = new C2G_StartMatch_Req();
+            G2C_StartMatch_Ack g2C_StartMatch_Ack = await SessionComponent.Instance.Session.Call(c2G_StartMatch_Req) as G2C_StartMatch_Ack; // 这里去看下服务器的处理逻辑
+            if (g2C_StartMatch_Ack.Error == ErrorCode.ERR_UserMoneyLessError) {
+                Log.Error("余额不足"); // 就是说，当且仅当余额不足的时候才会出这个错误？
+                return;
+            }
+            // 匹配成功了：UI 界面切换，切换到房间界面
+            UI room = Game.Scene.GetComponent<UIComponent>().Create(UIType.LandlordsRoom); // 装载新的UI视图
+            Game.Scene.GetComponent<UIComponent>().Remove(UIType.LandlordsLobby);          // 卸载旧的UI视图
+            // 将房间设为匹配状态
+            room.GetComponent<LandlordsRoomComponent>().Matching = true;
+        }
+        catch (Exception e) {
+            Log.Error(e.ToStr());
+        }
+    }
 #+END_SRC
-* 项目的理解消化：
-- 前面关于登录注册服与用户帐户管理写入数据库的部分，逻辑已经理解得狠清楚
-- 现将斗地主游戏的游戏逻辑，几个按钮的客户端调用，与服务器端的处理逻辑梳理完。为自己下一个可能的拖拉机双升或是打麻将作点儿必要的准备。 
-- 今天上午希望把上面想要梳理的逻辑追源码再看一遍看完。 
-* 小小小小小服务器：要怎么才能开始动手试图去实现这个小服务器呢？
-** 如果适配ET框架，现游戏可能哪些模块版块存在问题
-- 我也觉得ET框架可能不太适合我现在的游戏（也就是说，把我的游戏完全适配成ET框架来开发，原本只需要一个小小服务器，完全适配为ET框架，就把问题弄得狠复杂了。。。），
-- 使用ET框架，我所有的安卓基础就会被抛到九宵去外，不再关安卓SDK  NDK什么事儿了。。。。。是对自己太大的损耗。而我原本还可以简单封装实现的安卓录屏，游戏内使用安卓SDK相关功能模块录屏游戏过程等，会被全部废掉，损失太大不值得。我觉得我就只要个文件服务器加个数据库而已。
-- 原因是：我现在还想不通若是用ET框架来实现自己游戏的（服务器与客户端双端都可以热更新），我该如何实现我的方块砖10个按钮上的点击事件，射线检测？它的ILRuntime热更新程序域里对射线检测包的组件安装可能会成为自己狠大的问题，因为还不是狠懂里面的内部原理.这个模块重构的原理是:把射线检测,如果必要一定要,封装成如ET中任何其它可装载卸载的组件一样的装载到某个必要场景上去.ET里有个检测鼠标左右键位置的帮助类,但跟射线检测应该还是相差狠远的.
-- 所以,现在对这个框架,最深的感触是:盲人摸象,摸每部分细节似乎都快清楚了,却无法组装从一个更高的层面上来理解和把握框架设计,无法吃透,在大框架功能模块上犯难,在网上再搜一搜
-- 我可以把两组按钮画面同样做成预设与热更新资源包，射线检测同样会成为可装载可卸载的组件，可是再后面射线检测到的物体逻辑，感觉有点儿复杂了
-** 如果不适配，怎么弄个服务器带数据库等逻辑？
-- 使用部分共享源码的双端（共享的是文件服务器8个项目，MongoDB数据库服务器， Realm注册登录用，网关服，Location服， ETTAsk， RPC消息机制， NetComponent等自己机对陌生需要练习，而自己的服务器也不可缺省的相关功能）
-- 现在知道自己整的不沦不类的服务器所谓的登录，登录的是网页上的认证相关，跟自己真正要实现的游戏里注册登录服保存数据库完全两回事，现在知道了。
-- 作用ET的头，实现用户注册与登录，适配自己现有游戏的尾，游戏除了入口之外全游戏进热更新程序域里
-- 那么自己的现框架架构作尾，全游戏逻辑进热更新域，存在的问题就变成是：
-- 我无法再实时动态检查用记上下线顶号之类的,我只能默认登录过就是登录状态，可是用户下线了，或更严格的说掉线了，服务器并不及时知道，可以通过安卓SDK中的按钮登出知道。但是掉网了掉线了呢？
-- 再则，ILRuntime热更新程序域里，我又该如何实现在热更新程序域里网络上载用户的游戏保存进展？这里需要去想和理解，为什么它ET框架就可以在热更新程序域里同网络交互，你哪里还没有想明白？
-- ET框架，热更新程序域里装载的组件，只是帮助与外界游戏程序域连通好，真正的网络请求上传下载等是在热更新域外面完成链接式传进去的？感觉对这个大框架没有掌握好，脑袋仍然是在像糊糊一样。。。
-- 各种泛型，接口的定义，一二三个参数等的泛型接口定义(你可以去找一找工程中的各种ILRuntime的适配器)，全都是都可以成为热更新域里能够被游戏程序域里识别的原因，所以狠多设计，自带ILRuntime的适配性质
-- 去看热更新域里的适配初配置，可以看见它注册重定向了狠多函数签名的调用
+** 【服务端】 C2G_StartMatch_ReqHandler:【网关服】处理来自客户端的匹配请求 
 #+BEGIN_SRC csharp
-namespace ETModel {
-    public static class ILHelper {
-
-        public static void InitILRuntime(ILRuntime.Runtime.Enviorment.AppDomain appdomain) {
-            // 注册重定向函数
-            // 注册委托
-            appdomain.DelegateManager.RegisterMethodDelegate<List<object>>();
-            appdomain.DelegateManager.RegisterMethodDelegate<AChannel, System.Net.Sockets.SocketError>();
-            appdomain.DelegateManager.RegisterMethodDelegate<byte[], int, int>();
-            appdomain.DelegateManager.RegisterMethodDelegate<IResponse>();
-            appdomain.DelegateManager.RegisterMethodDelegate<Session, object>();
-            appdomain.DelegateManager.RegisterMethodDelegate<Session, byte, ushort, MemoryStream>();
-            appdomain.DelegateManager.RegisterMethodDelegate<Session>();
-            appdomain.DelegateManager.RegisterMethodDelegate<ILTypeInstance>();
-            appdomain.DelegateManager.RegisterFunctionDelegate<Google.Protobuf.Adapt_IMessage.Adaptor>();
-            appdomain.DelegateManager.RegisterMethodDelegate<Google.Protobuf.Adapt_IMessage.Adaptor>();
-            appdomain.DelegateManager.RegisterFunctionDelegate<Google.Protobuf.Adapt_IMessage.Adaptor, System.Boolean>();
-            appdomain.DelegateManager.RegisterDelegateConvertor<System.Predicate<Google.Protobuf.Adapt_IMessage.Adaptor>>((act) => {
-                return new System.Predicate<Google.Protobuf.Adapt_IMessage.Adaptor>((obj) => {
-                    return ((Func<Google.Protobuf.Adapt_IMessage.Adaptor, System.Boolean>)act)(obj);
-                });
-            });
-            CLRBindings.Initialize(appdomain);
-            // 注册适配器
-            Assembly assembly = typeof(Init).Assembly;
-            foreach (Type type in assembly.GetTypes()) { // 程序集里还有些ILAdapter标标签可扫
-                object[] attrs = type.GetCustomAttributes(typeof(ILAdapterAttribute), false);
-                if (attrs.Length == 0) {
-                    continue;
-                }
-                object obj = Activator.CreateInstance(type);
-                CrossBindingAdaptor adaptor = obj as CrossBindingAdaptor;
-                if (adaptor == null) {
-                    continue;
-                }
-                appdomain.RegisterCrossBindingAdaptor(adaptor);
+[MessageHandler(AppType.Gate)] // 网关服：处理客户端 StartMatch 请求消息
+public class C2G_StartMatch_ReqHandler : AMRpcHandler<C2G_StartMatch_Req, G2C_StartMatch_Ack> {
+    protected override async void Run(Session session, C2G_StartMatch_Req message, Action<G2C_StartMatch_Ack> reply) {
+        G2C_StartMatch_Ack response = new G2C_StartMatch_Ack();
+        try {
+            if (!GateHelper.SignSession(session)) { // 验证Session
+                response.Error = ErrorCode.ERR_SignError;
+                reply(response);
+                return;
             }
-            LitJson.JsonMapper.RegisterILRuntimeCLRRedirection(appdomain);
+            User user = session.GetComponent<SessionUserComponent>().User;
+            // 验证玩家是否符合进入房间要求,默认为100底分局
+            RoomConfig roomConfig = RoomHelper.GetConfig(RoomLevel.Lv100);// 有不同标准的游戏房间
+            UserInfo userInfo = await Game.Scene.GetComponent<DBProxyComponent>().Query<UserInfo>(user.UserID, false); // 跑数据库里去拿，这个玩家的现金验证是否合格
+            if (userInfo.Money < roomConfig.MinThreshold) {
+                response.Error = ErrorCode.ERR_UserMoneyLessError; // 玩家钱不够，不能玩
+                reply(response);
+                return;
+            }
+// 这里先发送响应，让客户端收到后切换房间界面，否则可能会出现重连消息在切换到房间界面之前发送导致重连异常【这个应该是，别人的源标注了】
+// 这里的顺序就显得关键：因为只有网关服向客户端返回服务器的匹配响应【并不一定说已经匹配完成，但告诉客户端服务器在着手处理这个工作。。。】，客户端才能创建房间UI 控件
+            reply(response); 
+            // 向匹配服务器发送匹配请求
+            StartConfigComponent config = Game.Scene.GetComponent<StartConfigComponent>();
+            IPEndPoint matchIPEndPoint = config.MatchConfig.GetComponent<InnerConfig>().IPEndPoint; // 匹配服务器的远程IP 地址
+            Session matchSession = Game.Scene.GetComponent<NetInnerComponent>().Get(matchIPEndPoint); // 拿到与这个匹配服务器通信的会话框实例
+            M2G_PlayerEnterMatch_Ack m2G_PlayerEnterMatch_Ack = await matchSession.Call(new G2M_PlayerEnterMatch_Req() { // 发消息代为客户端申请：申请匹配游戏
+                    PlayerID = user.InstanceId,
+                        UserID = user.UserID,
+                        SessionID = session.InstanceId,
+                        }) as M2G_PlayerEnterMatch_Ack;
+            user.IsMatching = true;
+        }
+        catch (Exception e) {
+            ReplyError(response, e, reply);
         }
     }
 }
 #+END_SRC
-- 举个标标签的例子：
-  #+BEGIN_SRC csharp
-namespace Google.Protobuf {
+** MatchComponent:【匹配功能？】组件，匹配逻辑在MatchComponentSystem扩展. 这里是处理匹配逻辑的组件：它就需要【申请匹配者人】＋【匹配玩家所到的游戏房间】两大部分
+- *【MatchRoomComponent】* ：被匹配到的房间，成为这个组件的另一个组成部分。
+- *【Matcher被匹配者】* ：是这个匹配功能的一大内在版块
+   #+BEGIN_SRC csharp
+// 匹配组件，匹配逻辑在MatchComponentSystem扩展. 这里是处理匹配的组件，与 Matcher 被匹配者相区分开来
+public class MatchComponent : Component {
+    // 游戏中匹配对象列表：值是 roomId
+    public readonly Dictionary<long, long> Playing = new Dictionary<long, long>();
+    // 匹配成功队列
+    public readonly Queue<Matcher> MatchSuccessQueue = new Queue<Matcher>();
+    // 创建房间消息加锁，避免因为延迟重复发多次创建房间消息
+    public bool CreateRoomLock { get; set; }
+}
+   #+END_SRC
+** MatchComponentSystem: Update() 更新系。后面跟几个组件及个体类
+- 与服务器的交互再涉及两个类：创建新房间组件，与申请匹配成功的玩家进入房间组件
+   #+BEGIN_SRC csharp
+public static class MatchComponentSystem {
+    public static void Update(this MatchComponent self) {
+        while (true) {
+            MatcherComponent matcherComponent = Game.Scene.GetComponent<MatcherComponent>();// 玩家管理组件
+            Queue<Matcher> matchers = new Queue<Matcher>(matcherComponent.GetAll());        // 玩家们
+            MatchRoomComponent roomManager = Game.Scene.GetComponent<MatchRoomComponent>(); // 游戏房间
+            Room room = roomManager.GetReadyRoom(); // 返回的是：人员不满 < 3 个的一个房间      // 房间个体
+            if (matchers.Count == 0) 
+                // 当没有匹配玩家时直接结束
+                break;
+            if (room == null && matchers.Count >= 3) // 分配一个空房间
+                // 当还有一桌匹配玩家且没有可加入房间时使用空房间
+                room = roomManager.GetIdleRoom();
+            if (room != null) { // 只要房间不为空，就被强按到这个房间里了，没有任何其它逻辑考量
+                // 当有准备状态房间且房间还有空位时匹配玩家直接加入填补空位
+                while (matchers.Count > 0 && room.Count < 3) // 是个循环：可以匹配好几个玩家，到好几个有空位的游戏房间 
+                    self.JoinRoom(room, matcherComponent.Remove(matchers.Dequeue().UserID));
+            }
+            else if (matchers.Count >= 3) {
+                // 当还有一桌匹配玩家且没有空房间时创建新房间
+                self.CreateRoom();
+                break;
+            } else break;
+            // 移除匹配成功玩家
+            while (self.MatchSuccessQueue.Count > 0) 
+                matcherComponent.Remove(self.MatchSuccessQueue.Dequeue().UserID);
+        }
+    }
+    // 创建房间
+    public static async void CreateRoom(this MatchComponent self) {
+        if (self.CreateRoomLock) 
+            return;
+        // 消息加锁，避免因为延迟重复发多次创建消息
+        self.CreateRoomLock = true;
+        // 发送创建房间消息：这里几个相关组件，可能重构的时候，也会被 ET7 重构去掉，所以没有看。重点看：【大型网络游戏中需要与服务器交互的部分】
+        IPEndPoint mapIPEndPoint = Game.Scene.GetComponent<AllotMapComponent>().GetAddress().GetComponent<InnerConfig>().IPEndPoint;
+        Session mapSession = Game.Scene.GetComponent<NetInnerComponent>().Get(mapIPEndPoint);
+        MP2MH_CreateRoom_Ack createRoomRE = await mapSession.Call(new MH2MP_CreateRoom_Req()) as MP2MH_CreateRoom_Ack; // <<<<<<<<<<<<<<<<<<<< 
+        Room room = ComponentFactory.CreateWithId<Room>(createRoomRE.RoomID);
+        Game.Scene.GetComponent<MatchRoomComponent>().Add(room);
+        // 解锁
+        self.CreateRoomLock = false;
+    }
+    // 加入房间：逻辑极简单，就只要钱够就可以了。多出了房间服务器【任何时候，活宝妹就是一定要嫁给亲爱的表哥！！！】
+    public static async void JoinRoom(this MatchComponent self, Room room, Matcher matcher) {
+        // 玩家加入房间，移除匹配队列
+        self.Playing[matcher.UserID] = room.Id;
+        self.MatchSuccessQueue.Enqueue(matcher);
+        // 向房间服务器发送玩家进入请求
+        ActorMessageSender actorProxy = Game.Scene.GetComponent<ActorMessageSenderComponent>().Get(room.Id);
+        IResponse response = await actorProxy.Call(new Actor_PlayerEnterRoom_Req() {
+                PlayerID = matcher.PlayerID,
+                    UserID = matcher.UserID,
+                    SessionID = matcher.GateSessionID
+                    });
+        Actor_PlayerEnterRoom_Ack actor_PlayerEnterRoom_Ack = response as Actor_PlayerEnterRoom_Ack;
+        Gamer gamer = GamerFactory.Create(matcher.PlayerID, matcher.UserID, actor_PlayerEnterRoom_Ack.GamerID);
+        room.Add(gamer);
+        // 向玩家发送匹配成功消息
+        ActorMessageSenderComponent actorProxyComponent = Game.Scene.GetComponent<ActorMessageSenderComponent>();
+        ActorMessageSender gamerActorProxy = actorProxyComponent.Get(gamer.PlayerID);
+        gamerActorProxy.Send(new Actor_MatchSucess_Ntt() { GamerID = gamer.Id });
+    }
+}
+   #+END_SRC
+*** MatchRoomComponent: 游戏房间组件，分玩家满，等更多的玩家，和空房间等几种情况
+   #+BEGIN_SRC csharp
+// 匹配房间管理组件，逻辑在MatchRoomComponentSystem扩展
+public class MatchRoomComponent : Component {
+    // 所有房间列表
+    public readonly Dictionary<long, Room> rooms = new Dictionary<long, Room>();
+    // 游戏中房间列表
+    public readonly Dictionary<long, Room> gameRooms = new Dictionary<long, Room>();
+    // 等待中房间列表
+    public readonly Dictionary<long, Room> readyRooms = new Dictionary<long, Room>();
+    // 空闲房间列表
+    public readonly Queue<Room> idleRooms = new Queue<Room>();
+    // 房间总数
+    public int TotalCount { get { return this.rooms.Count; } }
+    // 游戏中房间数
+    public int GameRoomCount { get { return gameRooms.Count; } }
+    // 等待中房间数: 只要人数不够的房间，都算等待中。。。。。
+    public int ReadyRoomCount { get { return readyRooms.Where(p => p.Value.Count < 3).Count(); } }
+    // 空闲房间数
+    public int IdleRoomCount { get { return idleRooms.Count; } }
+    public override void Dispose() {
+        if (this.IsDisposed) 
+            return;
+        base.Dispose();
+        foreach (var room in this.rooms.Values) {
+            room.Dispose();
+        }
+    }
+}
+   #+END_SRC
+*** Room | RoomState: 
+- 后面，还有个 RoomComponent 管理者类。下一节
+   #+BEGIN_SRC csharp
+// 房间状态
+public enum RoomState : byte {
+    Idle,       
+    Ready,      
+    Game        
+}
+public sealed class Room : Entity { // 房间对象
+    public readonly Dictionary<long, int> seats = new Dictionary<long, int>();
+    public readonly Gamer[] gamers = new Gamer[3];
+    // 房间状态
+    public RoomState State { get; set; } = RoomState.Idle;
+    // 房间玩家数量
+    public int Count { get { return seats.Values.Count; } }
+    public override void Dispose() 
+        if (this.IsDisposed) {
+            return;
+        base.Dispose();
+        seats.Clear();
+        for (int i = 0; i < gamers.Length; i++) 
+            if (gamers[i] != null) {
+                gamers[i].Dispose();
+                gamers[i] = null;
+            }
+        State = RoomState.Idle;
+    }
+}
+   #+END_SRC
+*** MatcherComponent: 匹配申请者、被匹配者，的管理类组件。管理者类，就管理了所有发出过这个申请的申请者
+   #+BEGIN_SRC csharp
+// 匹配对象管理组件
+public class MatcherComponent : Component {
+    private readonly Dictionary<long, Matcher> matchers = new Dictionary<long, Matcher>();
+    // 匹配对象数量
+    public int Count { get { return matchers.Count; } }
+    // 添加匹配对象
+    public void Add(Matcher matcher) {
+        this.matchers.Add(matcher.UserID, matcher);
+    }
+    // 获取匹配对象
+    public Matcher Get(long id) {
+        this.matchers.TryGetValue(id, out Matcher matcher);
+        return matcher;
+    }
+    // 获取所有匹配对象
+    public Matcher[] GetAll() {
+        return this.matchers.Values.ToArray();
+    }
+    // 移除匹配对象并返回
+    public Matcher Remove(long id) {
+        Matcher matcher = Get(id);
+        this.matchers.Remove(id);
+        return matcher;
+    }
+    public override void Dispose() {
+        if (this.IsDisposed) 
+            return;
+        base.Dispose();
+        foreach (var matcher in this.matchers.Values) {
+            matcher.Dispose();
+        }
+    }
+}
+   #+END_SRC
+*** Matcher: 匹配申请者，被匹配者组件。是指具体的一个个的申请者
+- 它像是个自觉醒组件。同一个文件里也添加了 Awake()
+   #+BEGIN_SRC csharp
+// 匹配对象: 匹配的玩家系统
+public sealed class Matcher : Entity {
+    // 用户ID（唯一）
+    public long UserID { get; private set; }
+    // 玩家GateActorID
+    public long PlayerID { get; set; }
+    // 客户端与网关服务器的SessionID
+    public long GateSessionID { get; set; }
+    public void Awake(long id) {
+        this.UserID = id;
+    }
+    public override void Dispose() {
+        if(this.IsDisposed) return; 
+        base.Dispose();
+        this.UserID = 0;
+        this.PlayerID = 0;
+        this.GateSessionID = 0;
+    }
+}
+   #+END_SRC
+** 【服务端】MH2MP_CreateRoom_ReqHandler:【地图服】会创建新的游戏房间
+- 工厂化生产了一个房间。并为房间添加了几个管理者类组件：DeckComponent, DeskCardsCacheComponent, OrderControllerComponent, GameControllerComponent, 
+- 为游戏房间添加了邮箱组件，方便游戏房间里聊天，“再不出牌我就要打 120 了呀。。活宝妹就是一定要嫁给亲爱的表哥！！！”【活宝妹就是一定要嫁给亲爱的表哥！！！】
+- 把当前刚生产的房间加入管理者的统管范围。RoomComponent
+- 这里只是大致了解，游戏客户端与服务端的交互设计，游戏里元件组件的拆分，里面的连接逻辑，元件组件间的交互逻辑还没有细看。有必要时会细看。
+   #+BEGIN_SRC csharp
+[MessageHandler(AppType.Map)]
+public class MH2MP_CreateRoom_ReqHandler : AMRpcHandler<MH2MP_CreateRoom_Req, MP2MH_CreateRoom_Ack> {
+    protected override async void Run(Session session, MH2MP_CreateRoom_Req message, Action<MP2MH_CreateRoom_Ack> reply) {
+        MP2MH_CreateRoom_Ack response = new MP2MH_CreateRoom_Ack();
+        try {
+            // 创建房间
+            Room room = ComponentFactory.Create<Room>(); // 工厂化生产一个房间
+            room.AddComponent<DeckComponent>();
+            room.AddComponent<DeskCardsCacheComponent>();
+            room.AddComponent<OrderControllerComponent>();
+            room.AddComponent<GameControllerComponent, RoomConfig>(RoomHelper.GetConfig(RoomLevel.Lv100));
+            await room.AddComponent<MailBoxComponent>().AddLocation();// 去查看一下：是否是为了方便游戏房间里聊天？
+            Game.Scene.GetComponent<RoomComponent>().Add(room);
+            Log.Info($"创建房间{room.InstanceId}");
+            response.RoomID = room.InstanceId;
+            reply(response);
+        }
+        catch (Exception e) {
+            ReplyError(response, e, reply);
+        }
+    }
+}
+   #+END_SRC
+*** DeckComponent: 牌库组件
+    #+BEGIN_SRC csharp
+public class DeckComponent : Component { // 牌库组件
+    // 牌库中的牌
+    public readonly List<Card> library = new List<Card>();
+    // 牌库中的总牌数
+    public int CardsCount { get { return this.library.Count; } }
+    public override void Dispose() {
+        if (this.IsDisposed) 
+            return;
+        base.Dispose();
+        library.Clear();
+    }
+}
+    #+END_SRC
+*** DeskCardsCacheComponent: 上面一个组件可能不够用，不得不加几个组件来组合
+    #+BEGIN_SRC csharp
+public class DeskCardsCacheComponent : Component {
+    // 牌桌上的牌
+    public readonly List<Card> library = new List<Card>();
+    // 地主牌
+    public readonly List<Card> LordCards = new List<Card>();
+    // 牌桌上的总牌数
+    public int CardsCount { get { return this.library.Count; } }
+    // 当前最大牌型: 这里为什么要纪录当前最大牌型？哪家的？读源码来搞明白
+    public CardsType Rule { get; set; }
+    // 牌桌上最小的牌
+    public int MinWeight { get { return (int)this.library[0].CardWeight; } }
+    public override void Dispose() {
+        if (this.IsDisposed) 
+            return;
+        base.Dispose();
+        library.Clear();
+        LordCards.Clear();
+        Rule = CardsType.None;
+    }
+}
+    #+END_SRC
+*** OrderControllerComponent: 玩家出牌顺序什么之类的游戏逻辑的管理
+    #+BEGIN_SRC csharp
+// 这些都算是：游戏逻辑控制的组件化拆分。以前自己的游戏可能是一个巨大无比的控制器文件，这里折分成了狠多个小组件控制
+public class OrderControllerComponent : Component {
+    // 先手玩家
+    public KeyValuePair<long, bool> FirstAuthority { get; set; }
+    // 玩家抢地主状态
+    public Dictionary<long, bool> GamerLandlordState = new Dictionary<long, bool>();
+    // 本轮最大牌型玩家
+    public long Biggest { get; set; }
+    // 当前出牌玩家
+    public long CurrentAuthority { get; set; }
+    // 当前抢地主玩家
+    public int SelectLordIndex { get; set; }
 
-    [ILAdapter]
-    public class Adapt_IMessage: CrossBindingAdaptor {
-        public override Type BaseCLRType {
-            get {
-                return typeof (IMessage);
-            }
-        }
-        public override Type AdaptorType {
-            get {
-                return typeof (Adaptor);
-            }
-        }
-        public override object CreateCLRInstance(AppDomain appdomain, ILTypeInstance instance) {
-            return new Adaptor(appdomain, instance);
-        }
+    public override void Dispose() {
+        if (this.IsDisposed) 
+            return;
+        base.Dispose();
+        this.GamerLandlordState.Clear();
+        this.Biggest = 0;
+        this.CurrentAuthority = 0;
+        this.SelectLordIndex = 0;
+    }
+}
+    #+END_SRC
+*** GameControllerComponent: 游戏控制类
+    #+BEGIN_SRC csharp
+// 感觉个类，更多的是【一座桥】：把游戏的这个单位级件，全连接起来
+public class GameControllerComponent : Component {
+    // 房间配置
+    public RoomConfig Config { get; set; }
+    // 底分: 这里呈现出与房间的这些设置不一致的状态。是说，三个玩家，可以在既定房间的基础上提升玩乐标准？
+    public long BasePointPerMatch { get; set; }
+    // 全场倍率
+    public int Multiples { get; set; }
+    // 最低入场门槛
+    public long MinThreshold { get; set; }
 
-        public class Adaptor: MyAdaptor, IMessage {
-            public Adaptor(AppDomain appdomain, ILTypeInstance instance): base(appdomain, instance) {
-            }
-            protected override AdaptHelper.AdaptMethod[] GetAdaptMethods() {
-                AdaptHelper.AdaptMethod[] methods = {
-                    new AdaptHelper.AdaptMethod { Name = "MergeFrom", ParamCount = 1 },
-                    new AdaptHelper.AdaptMethod { Name = "WriteTo", ParamCount = 1 },
-                    new AdaptHelper.AdaptMethod { Name = "CalculateSize", ParamCount = 0 },
+    public override void Dispose() {
+        if (this.IsDisposed) return;
+        base.Dispose();
+        this.BasePointPerMatch = 0;
+        this.Multiples = 0;
+        this.MinThreshold = 0;
+    }
+}
+    #+END_SRC
+*** RoomComponent: 房间管理组件
+- ET 框架源码读多也，也该明白，所有的 Component 组件，全都是管理者组件。
+    #+BEGIN_SRC csharp
+// 房间管理组件
+public class RoomComponent : Component {
+    private readonly Dictionary<long, Room> rooms = new Dictionary<long, Room>();
+    // 添加房间
+    public void Add(Room room) {
+        this.rooms.Add(room.InstanceId, room);
+    }
+    // 获取房间
+    public Room Get(long id) {
+        Room room;
+        this.rooms.TryGetValue(id, out room);
+        return room;
+    }
+    // 移除房间并返回
+    public Room Remove(long id) {
+        Room room = Get(id);
+        this.rooms.Remove(id);
+        return room;
+    }
+    public override void Dispose() {
+        if (this.IsDisposed) return;
+        base.Dispose();
+        foreach (var room in this.rooms.Values) {
+            room.Dispose();
+        }
+    }
+}
+    #+END_SRC
+*** RoomConfig: 房间配置，房间的基本参数，什么的
+    #+BEGIN_SRC csharp
+// 房间配置
+public struct RoomConfig {
+    // 房间初始倍率
+    public int Multiples { get; set; }
+    // 房间底分
+    public long BasePointPerMatch { get; set; }
+    // 房间最低门槛
+    public long MinThreshold { get; set; }
+}
+    #+END_SRC
+** Actor_PlayerEnterRoom_ReqHandler: 玩家进入游戏房间
+- 为玩家添加邮箱，方便玩家收发消息。那前面，为什么房间也要添加邮箱？集中消息？可是每个玩家看见的都是自己的往返消息，集中消息给谁看？
+- 广播：新玩家进场
+- 通过代理发送：【游戏开始】的消息？不知道这个消息是怎么处理的。逻辑不通，每个玩家都发，谁说了算，得查逻辑
+    #+BEGIN_SRC csharp
+[ActorMessageHandler(AppType.Map)]
+public class Actor_PlayerEnterRoom_ReqHandler : AMActorRpcHandler<Room, Actor_PlayerEnterRoom_Req, Actor_PlayerEnterRoom_Ack> {
+    protected override async Task Run(Room room, Actor_PlayerEnterRoom_Req message, Action<Actor_PlayerEnterRoom_Ack> reply) {
+        Actor_PlayerEnterRoom_Ack response = new Actor_PlayerEnterRoom_Ack();
+        try {
+            Gamer gamer = room.Get(message.UserID);
+            if (gamer == null) { // 当前玩家，在这个被分配的房间里，还没被初始化
+                // 创建房间玩家对象
+                gamer = GamerFactory.Create(message.PlayerID, message.UserID);
+                await gamer.AddComponent<MailBoxComponent>().AddLocation(); // 只有给玩家挂上这个组件，并向中央邮件注册登记地址，接下来的游戏它才可以收发消息，出牌什么的
+                gamer.AddComponent<UnitGateComponent, long>(message.SessionID);
+                // 加入到房间
+                room.Add(gamer); // 这里就又多一步逻辑处理：这里当服务器匹配成功一个玩家，就去做相应的客户端视图层相应的变动调动
+                Actor_GamerEnterRoom_Ntt broadcastMessage = new Actor_GamerEnterRoom_Ntt();
+                foreach (Gamer _gamer in room.GetAll()) {
+                    if (_gamer == null) {
+                        // 添加空位: 添加所有的，当前这个消息的接受者
+                        broadcastMessage.Gamers.Add(new GamerInfo());
+                        continue;
+                    }
+                    // 添加玩家信息
+                    GamerInfo info = new GamerInfo() { UserID = _gamer.UserID, IsReady = _gamer.IsReady };
+                    broadcastMessage.Gamers.Add(info);
+                }
+                // 广播消息：给房间内的所有玩家，新人驾到，请多关照
+                room.Broadcast(broadcastMessage);
+                Log.Info($"玩家{message.UserID}进入房间");
+            } else { // 【任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！】
+                // 玩家重连
+                gamer.isOffline = false;
+                gamer.PlayerID = message.PlayerID;
+                gamer.GetComponent<UnitGateComponent>().GateSessionActorId = message.SessionID;
+                // 玩家重连，移除托管组件
+                gamer.RemoveComponent<TrusteeshipComponent>(); // 这个好像是使玩家可以自动机器人帮出牌的
+                Actor_GamerEnterRoom_Ntt broadcastMessage = new Actor_GamerEnterRoom_Ntt();
+                foreach (Gamer _gamer in room.GetAll()) {
+                    if (_gamer == null) {
+                        // 添加空位
+                        broadcastMessage.Gamers.Add(default(GamerInfo));
+                        continue;
+                    }
+                    // 添加玩家信息
+                    GamerInfo info = new GamerInfo() { UserID = _gamer.UserID, IsReady = _gamer.IsReady };
+                    broadcastMessage.Gamers.Add(info);
+                }
+                // 发送房间玩家信息
+                ActorMessageSender actorProxy = gamer.GetComponent<UnitGateComponent>().GetActorMessageSender();
+                actorProxy.Send(broadcastMessage);
+                // 这部分：看看清楚 
+                List<GamerCardNum> gamersCardNum = new List<GamerCardNum>();
+                List<GamerState> gamersState = new List<GamerState>();
+                GameControllerComponent gameController = room.GetComponent<GameControllerComponent>();
+                OrderControllerComponent orderController = room.GetComponent<OrderControllerComponent>();
+                DeskCardsCacheComponent deskCardsCache = room.GetComponent<DeskCardsCacheComponent>();
+                foreach (Gamer _gamer in room.GetAll()) {
+                    HandCardsComponent handCards = _gamer.GetComponent<HandCardsComponent>(); // 游戏开始里，Actor_GameStart_NttHandler 会为玩家添加手牌
+                    gamersCardNum.Add(new GamerCardNum() {
+                            UserID = _gamer.UserID,
+                                Num = _gamer.GetComponent<HandCardsComponent>().GetAll().Length
+                                });
+                    GamerState gamerState = new GamerState() {
+                        UserID = _gamer.UserID,
+                        UserIdentity = handCards.AccessIdentity
+                    };
+                    if (orderController.GamerLandlordState.TryGetValue(_gamer.UserID, out bool state)) {
+                        if (state) 
+                            gamerState.State = GrabLandlordState.Grab;
+                        else 
+                            gamerState.State = GrabLandlordState.UnGrab;
+                    }
+                    gamersState.Add(gamerState);
+                }
+                // 发送游戏开始消息
+                Actor_GameStart_Ntt gameStartNotice = new Actor_GameStart_Ntt(); // 因为这个逻辑比较多，后面的没有再看
+                gameStartNotice.HandCards.AddRange(gamer.GetComponent<HandCardsComponent>().GetAll());
+                gameStartNotice.GamersCardNum.AddRange(gamersCardNum);
+                actorProxy.Send(gameStartNotice);
+                Card[] lordCards = null;
+                if (gamer.GetComponent<HandCardsComponent>().AccessIdentity == Identity.None) {
+                    // 广播先手玩家
+                    actorProxy.Send(new Actor_AuthorityGrabLandlord_Ntt() { UserID = orderController.CurrentAuthority });
+                } else {
+                    if (gamer.UserID == orderController.CurrentAuthority) {
+                        // 发送可以出牌消息
+                        bool isFirst = gamer.UserID == orderController.Biggest;
+                        actorProxy.Send(new Actor_AuthorityPlayCard_Ntt() { UserID = orderController.CurrentAuthority, IsFirst = isFirst });
+                    }
+                    lordCards = deskCardsCache.LordCards.ToArray();
+                }
+                // 发送重连数据
+                Actor_GamerReconnect_Ntt reconnectNotice = new Actor_GamerReconnect_Ntt() {
+                    UserId = orderController.Biggest,
+                    Multiples = room.GetComponent<GameControllerComponent>().Multiples
                 };
-                return methods;
+                reconnectNotice.GamersState.AddRange(gamersState);
+                reconnectNotice.Cards.AddRange(deskCardsCache.library);
+                if (lordCards != null) 
+                    reconnectNotice.LordCards.AddRange(lordCards);
+                actorProxy.Send(reconnectNotice);
+                Log.Info($"玩家{message.UserID}重连");
             }
-            public void MergeFrom(CodedInputStream input) {
-                Invoke(0, input);
-            }
-            public void WriteTo(CodedOutputStream output) {
-                Invoke(1, output);
-            }
-            public int CalculateSize() {
-                return (int) Invoke(2);
-            }
+            response.GamerID = gamer.InstanceId;
+            reply(response);
+        }
+        catch (Exception e) {
+            ReplyError(response, e, reply);
         }
     }
 }
-  #+END_SRC
-- 那么就可以小一点儿一点儿地来,先弄个登录窗口,实现服务器的注册登录保存登录信息到数据库,相对比较小点儿的逻辑.这个过程中把MongoDB数据库的配置等所有连接过程中必要的步骤,可能出现的问题给解决掉,就算前进了一小步呀
-- 不知道怎么开始，也不知道怎么创建可以㠌套的像是安卓模块库一样的子工程，就只能把小游戏斗地主复制一份了再从它的基础上来改？！！！
-- 如果简单一点儿开始，我觉得我应该是可以先把简单点儿的MongoDB数据库连接成功，把用户登录相关的逻辑，网络交互的部分，ETTask RPC ACTOR消息等，哪怕是复制，把这部分弄过去
-** 点击注册后的日志（5  5）
-- 早上还是想要看些更有难度，自已经前不太懂的源码，或是去理解脑袋不清醒时理解不了的概念。【爱表哥，爱生活！！！】
-[ 亲爱的表哥，活宝妹一定要嫁的亲爱的表哥！！！活宝妹就是一定要嫁给亲爱的表哥！！！】
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-[ 亲爱的表哥，活宝妹一定要嫁的亲爱的表哥！！！活宝妹就是一定要嫁给亲爱的表哥！！！】
+    #+END_SRC
+*** UnitGateComponent|UnitGateComponentAwakeSystem
+- 有了这个组件，好像是玩家间就可以发消息了？
+    #+BEGIN_SRC csharp
+[ObjectSystem]
+public class UnitGateComponentAwakeSystem : AwakeSystem<UnitGateComponent, long> {
+    public override void Awake(UnitGateComponent self, long a) {
+        self.Awake(a);
+    }
+}
+public class UnitGateComponent : Component, ISerializeToEntity {
+    public long GateSessionActorId;
+    public bool IsDisconnect;
+    public void Awake(long gateSessionId) {
+        this.GateSessionActorId = gateSessionId;
+    }
+    public ActorMessageSender GetActorMessageSender() {
+        return Game.Scene.GetComponent<ActorMessageSenderComponent>().Get(this.GateSessionActorId);
+    }
+}
+    #+END_SRC
+*** RoomSystem: 房间内部逻辑生成系，可以添加移除玩家、广播消息等
+    #+BEGIN_SRC csharp
+public static class RoomSystem {
+    // 添加玩家
+    public static void Add(this Room self, Gamer gamer) {
+        int seatIndex = self.GetEmptySeat();
+        // 玩家需要获取一个座位坐下
+        if (seatIndex >= 0) {
+            self.gamers[seatIndex] = gamer;
+            self.seats[gamer.UserID] = seatIndex;
+            gamer.RoomID = self.InstanceId;
+        }
+    }
+    // 获取玩家
+    public static Gamer Get(this Room self, long id) {
+        int seatIndex = self.GetGamerSeat(id);
+        if (seatIndex >= 0) 
+            return self.gamers[seatIndex];
+        return null;
+    }
+    // 获取所有玩家
+    public static Gamer[] GetAll(this Room self) {
+        return self.gamers;
+    }
+    // 获取玩家座位索引
+    public static int GetGamerSeat(this Room self, long id) {
+        if (self.seats.TryGetValue(id, out int seatIndex)) 
+            return seatIndex;
+        return -1;
+    }
+    // 移除玩家并返回
+    public static Gamer Remove(this Room self, long id) {
+        int seatIndex = self.GetGamerSeat(id);
+        if (seatIndex >= 0) {
+            Gamer gamer = self.gamers[seatIndex];
+            self.gamers[seatIndex] = null;
+            self.seats.Remove(id);
+            gamer.RoomID = 0;
+            return gamer;
+        }
+        return null;
+    }
+    // 获取空座位
+    // <returns>返回座位索引，没有空座位时返回-1</returns>
+    public static int GetEmptySeat(this Room self) {
+        for (int i = 0; i < self.gamers.Length; i++) 
+            if (self.gamers[i] == null) 
+                return i;
+        return -1;
+    }
+    // 广播消息
+    public static void Broadcast(this Room self, IActorMessage message) {
+        foreach (Gamer gamer in self.gamers) {
+            if (gamer == null || gamer.isOffline) 
+                continue;
+            ActorMessageSender actorProxy = gamer.GetComponent<UnitGateComponent>().GetActorMessageSender();
+            actorProxy.Send(message);
+        }
+    }
+}
+    #+END_SRC
+*** GamerState: 玩家状态消息， id, UserIdentity, 是地主吗？
+    #+BEGIN_SRC csharp
+message GamerState {
+    int64 UserID = 1;
+    ETModel.Identity UserIdentity = 2;
+	GrabLandlordState State = 3;
+}    
+#+END_SRC
+*** HandCardsComponent: 为进入了（和正在处理进入）房间的玩家，添加手里的牌组件
+    #+BEGIN_SRC csharp
+public class HandCardsComponent : Component {
+    // 所有手牌
+    public readonly List<Card> library = new List<Card>();
+    // 身份：地主，还是平民老百姓？
+    public Identity AccessIdentity { get; set; }
+    // 是否托管：自动出牌吗
+    public bool IsTrusteeship { get; set; }
+    // 手牌数
+    public int CardsCount { get { return library.Count; } }
+    public override void Dispose() {
+        if (this.IsDisposed) return;
+        base.Dispose();
+        this.library.Clear();
+        AccessIdentity = Identity.None;
+        IsTrusteeship = false;
+    }
+}
+    #+END_SRC
+** Actor_GameStart_NttHandler: 游戏开始逻辑处理
+    #+BEGIN_SRC csharp
+[MessageHandler]
+public class Actor_GameStart_NttHandler : AMHandler<Actor_GameStart_Ntt> {
+    protected override void Run(ETModel.Session session, Actor_GameStart_Ntt message) {
+        UI uiRoom = Game.Scene.GetComponent<UIComponent>().Get(UIType.LandlordsRoom);
+        GamerComponent gamerComponent = uiRoom.GetComponent<GamerComponent>();
+        // 初始化玩家UI
+        foreach (GamerCardNum gamerCardNum in message.GamersCardNum) {
+            Gamer gamer = uiRoom.GetComponent<GamerComponent>().Get(gamerCardNum.UserID);
+            GamerUIComponent gamerUI = gamer.GetComponent<GamerUIComponent>();
+            gamerUI.GameStart();
+            HandCardsComponent handCards = gamer.GetComponent<HandCardsComponent>();
+            if (handCards != null) 
+                handCards.Reset();
+            else 
+                handCards = gamer.AddComponent<HandCardsComponent, GameObject>(gamerUI.Panel);
+            handCards.Appear();
+            if (gamer.UserID == gamerComponent.LocalGamer.UserID) 
+                // 本地玩家添加手牌
+                handCards.AddCards(message.HandCards);
+            else 
+                // 设置其他玩家手牌数
+                handCards.SetHandCardsNum(gamerCardNum.Num);
+        }
+        // 显示牌桌UI
+        GameObject desk = uiRoom.GameObject.Get<GameObject>("Desk");
+        desk.SetActive(true);
+        GameObject lordPokers = desk.Get<GameObject>("LordPokers");
+        // 重置地主牌
+        Sprite lordSprite = CardHelper.GetCardSprite("None");
+        for (int i = 0; i < lordPokers.transform.childCount; i++) 
+            lordPokers.transform.GetChild(i).GetComponent<Image>().sprite = lordSprite;
+        LandlordsRoomComponent uiRoomComponent = uiRoom.GetComponent<LandlordsRoomComponent>();
+        // 清空选中牌
+        uiRoomComponent.Interaction.Clear();
+        // 设置初始倍率
+        uiRoomComponent.SetMultiples(1);
+    }
+}
+    #+END_SRC
+*** 【任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！】
+    #+BEGIN_SRC csharp
+    #+END_SRC
+*** 【爱表哥，爱生活！！！】
+    #+BEGIN_SRC csharp
+    #+END_SRC
+*** 【任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！】
+    #+BEGIN_SRC csharp
+    #+END_SRC
+* 源码梳理：用作【参考项目】来指导拖拉机项目的重构。
+- 这个文件，以前不知道总结的是些什么乱七八糟的。现在重点梳理：斗地主的游戏逻辑相关
+- 目的是用作参考，来指导自己【拖拉机游戏】的重构。
+- 所以就按照界面相关的形式，或是几个按钮回调的形式来梳理游戏逻辑的【客户端】请求与【服务端】的处理请求
+- 【任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！爱表哥，爱生活！！！】

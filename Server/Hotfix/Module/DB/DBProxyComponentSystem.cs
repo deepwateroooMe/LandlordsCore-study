@@ -15,7 +15,6 @@ namespace ETHotfix {
             self.Awake();
         }
     }
-    
     // 用来与数据库操作代理
     public static class DBProxyComponentEx {
         public static void Awake(this DBProxyComponent self) {
@@ -43,7 +42,6 @@ namespace ETHotfix {
             DBQueryResponse dbQueryResponse = (DBQueryResponse)await session.Call(new DBQueryRequest { CollectionName = typeof(T).Name, Id = id, NeedCache = needCache });
             return (T)dbQueryResponse.Component;
         }
-        
         // 根据查询表达式查询
         public static async Task<List<ComponentWithId>> Query<T>(this DBProxyComponent self, Expression<Func<T ,bool>> exp) where T: ComponentWithId {
             ExpressionFilterDefinition<T> filter = new ExpressionFilterDefinition<T>(exp);

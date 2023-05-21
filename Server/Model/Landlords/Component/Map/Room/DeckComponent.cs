@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 namespace ETModel {
-
     // 牌库组件
     public class DeckComponent : Component {
         // 牌库中的牌
@@ -9,9 +8,8 @@ namespace ETModel {
         public int CardsCount { get { return this.library.Count; } }
 
         public override void Dispose() {
-            if(this.IsDisposed) {
+            if (this.IsDisposed) 
                 return;
-            }
             base.Dispose();
             library.Clear();
         }

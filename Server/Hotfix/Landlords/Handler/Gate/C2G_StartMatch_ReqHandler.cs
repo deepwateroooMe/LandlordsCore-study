@@ -2,14 +2,12 @@
 using ETModel;
 using System.Net;
 namespace ETHotfix {
-    // 网关服：处理客户端 StartMatch 请求消息
-    [MessageHandler(AppType.Gate)]
+    [MessageHandler(AppType.Gate)] // 网关服：处理客户端 StartMatch 请求消息
     public class C2G_StartMatch_ReqHandler : AMRpcHandler<C2G_StartMatch_Req, G2C_StartMatch_Ack> {
         protected override async void Run(Session session, C2G_StartMatch_Req message, Action<G2C_StartMatch_Ack> reply) {
             G2C_StartMatch_Ack response = new G2C_StartMatch_Ack();
             try {
-                // 验证Session
-                if (!GateHelper.SignSession(session)) {
+                if (!GateHelper.SignSession(session)) { // 验证Session
                     response.Error = ErrorCode.ERR_SignError;
                     reply(response);
                     return;

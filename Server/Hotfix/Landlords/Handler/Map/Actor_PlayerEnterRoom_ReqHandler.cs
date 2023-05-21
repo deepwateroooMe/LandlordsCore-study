@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ETModel;
 namespace ETHotfix {
-
     [ActorMessageHandler(AppType.Map)]
     public class Actor_PlayerEnterRoom_ReqHandler : AMActorRpcHandler<Room, Actor_PlayerEnterRoom_Req, Actor_PlayerEnterRoom_Ack> {
-
         protected override async Task Run(Room room, Actor_PlayerEnterRoom_Req message, Action<Actor_PlayerEnterRoom_Ack> reply) {
             Actor_PlayerEnterRoom_Ack response = new Actor_PlayerEnterRoom_Ack();
             try {
@@ -21,7 +19,7 @@ namespace ETHotfix {
                     Actor_GamerEnterRoom_Ntt broadcastMessage = new Actor_GamerEnterRoom_Ntt();
                     foreach (Gamer _gamer in room.GetAll()) {
                         if (_gamer == null) {
-                            // 添加空位
+                            // 添加空位: 添加所有的，当前这个消息的接受者
                             broadcastMessage.Gamers.Add(new GamerInfo());
                             continue;
                         }
@@ -29,16 +27,16 @@ namespace ETHotfix {
                         GamerInfo info = new GamerInfo() { UserID = _gamer.UserID, IsReady = _gamer.IsReady };
                         broadcastMessage.Gamers.Add(info);
                     }
-                    // 广播房间内玩家消息：为什么这里说是广播消息？
+                    // 广播消息：给房间内的所有玩家，新人驾到，请多关照
                     room.Broadcast(broadcastMessage);
                     Log.Info($"玩家{message.UserID}进入房间");
-                } else {  // 这里大致把这部分的逻辑看一下，要去弄好吃了。。。。。【这里没看完，下次接着看。爱表哥，爱生活！！！】
+                } else { // 【任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！】
                     // 玩家重连
                     gamer.isOffline = false;
                     gamer.PlayerID = message.PlayerID;
                     gamer.GetComponent<UnitGateComponent>().GateSessionActorId = message.SessionID;
                     // 玩家重连，移除托管组件
-                    gamer.RemoveComponent<TrusteeshipComponent>();
+                    gamer.RemoveComponent<TrusteeshipComponent>(); // 这个好像是使玩家可以自动机器人帮出牌的
                     Actor_GamerEnterRoom_Ntt broadcastMessage = new Actor_GamerEnterRoom_Ntt();
                     foreach (Gamer _gamer in room.GetAll()) {
                         if (_gamer == null) {
@@ -53,13 +51,14 @@ namespace ETHotfix {
                     // 发送房间玩家信息
                     ActorMessageSender actorProxy = gamer.GetComponent<UnitGateComponent>().GetActorMessageSender();
                     actorProxy.Send(broadcastMessage);
+                    // 这部分：看看清楚 
                     List<GamerCardNum> gamersCardNum = new List<GamerCardNum>();
                     List<GamerState> gamersState = new List<GamerState>();
                     GameControllerComponent gameController = room.GetComponent<GameControllerComponent>();
                     OrderControllerComponent orderController = room.GetComponent<OrderControllerComponent>();
                     DeskCardsCacheComponent deskCardsCache = room.GetComponent<DeskCardsCacheComponent>();
                     foreach (Gamer _gamer in room.GetAll()) {
-                        HandCardsComponent handCards = _gamer.GetComponent<HandCardsComponent>();
+                        HandCardsComponent handCards = _gamer.GetComponent<HandCardsComponent>(); // 游戏开始里，Actor_GameStart_NttHandler 会为玩家添加手牌
                         gamersCardNum.Add(new GamerCardNum() {
                                 UserID = _gamer.UserID,
                                     Num = _gamer.GetComponent<HandCardsComponent>().GetAll().Length
@@ -69,17 +68,15 @@ namespace ETHotfix {
                             UserIdentity = handCards.AccessIdentity
                         };
                         if (orderController.GamerLandlordState.TryGetValue(_gamer.UserID, out bool state)) {
-                            if (state) {
+                            if (state) 
                                 gamerState.State = GrabLandlordState.Grab;
-                            }
-                            else {
+                            else 
                                 gamerState.State = GrabLandlordState.UnGrab;
-                            }
                         }
                         gamersState.Add(gamerState);
                     }
                     // 发送游戏开始消息
-                    Actor_GameStart_Ntt gameStartNotice = new Actor_GameStart_Ntt();
+                    Actor_GameStart_Ntt gameStartNotice = new Actor_GameStart_Ntt(); // 因为这个逻辑比较多，后面的没有再看
                     gameStartNotice.HandCards.AddRange(gamer.GetComponent<HandCardsComponent>().GetAll());
                     gameStartNotice.GamersCardNum.AddRange(gamersCardNum);
                     actorProxy.Send(gameStartNotice);
@@ -102,9 +99,8 @@ namespace ETHotfix {
                     };
                     reconnectNotice.GamersState.AddRange(gamersState);
                     reconnectNotice.Cards.AddRange(deskCardsCache.library);
-                    if (lordCards != null) {
+                    if (lordCards != null) 
                         reconnectNotice.LordCards.AddRange(lordCards);
-                    }
                     actorProxy.Send(reconnectNotice);
                     Log.Info($"玩家{message.UserID}重连");
                 }
