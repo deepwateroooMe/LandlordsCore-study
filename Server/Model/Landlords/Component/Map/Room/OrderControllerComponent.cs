@@ -4,7 +4,7 @@ namespace ETModel {
     public class OrderControllerComponent : Component {
         // 先手玩家
         public KeyValuePair<long, bool> FirstAuthority { get; set; }
-        // 玩家抢地主状态
+        // 玩家抢地主状态, 或说是意愿，想不想抢
         public Dictionary<long, bool> GamerLandlordState = new Dictionary<long, bool>();
         // 本轮最大牌型玩家
         public long Biggest { get; set; }

@@ -9,8 +9,7 @@ namespace ETHotfix {
         protected override void Run(ETModel.Session session, Actor_GameStart_Ntt message) {
             UI uiRoom = Game.Scene.GetComponent<UIComponent>().Get(UIType.LandlordsRoom);
             GamerComponent gamerComponent = uiRoom.GetComponent<GamerComponent>();
-            // 初始化玩家UI
-            foreach (GamerCardNum gamerCardNum in message.GamersCardNum) {
+            foreach (GamerCardNum gamerCardNum in message.GamersCardNum) { // 初始化玩家UI
                 Gamer gamer = uiRoom.GetComponent<GamerComponent>().Get(gamerCardNum.UserID);
                 GamerUIComponent gamerUI = gamer.GetComponent<GamerUIComponent>();
                 gamerUI.GameStart();
@@ -27,8 +26,7 @@ namespace ETHotfix {
                     // 设置其他玩家手牌数
                     handCards.SetHandCardsNum(gamerCardNum.Num);
             }
-            // 显示牌桌UI
-            GameObject desk = uiRoom.GameObject.Get<GameObject>("Desk");
+            GameObject desk = uiRoom.GameObject.Get<GameObject>("Desk"); // 显示牌桌UI
             desk.SetActive(true);
             GameObject lordPokers = desk.Get<GameObject>("LordPokers");
             // 重置地主牌

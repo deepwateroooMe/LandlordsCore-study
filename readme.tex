@@ -1,4 +1,4 @@
-% Created 2023-05-20 Sat 17:55
+% Created 2023-05-20 Sat 22:37
 \documentclass[9pt, b5paper]{article}
 \usepackage{xeCJK}
 \usepackage[T1]{fontenc}
@@ -495,6 +495,7 @@ public struct RoomConfig {
     public long MinThreshold { get; set; }
 }
 \end{minted}
+
 \subsection{Actor\_PlayerEnterRoom\_ReqHandler: 玩家进入游戏房间}
 \label{sec-1-6}
 \begin{itemize}
@@ -728,8 +729,12 @@ public class HandCardsComponent : Component {
     }
 }
 \end{minted}
+
 \subsection{Actor\_GameStart\_NttHandler: 游戏开始逻辑处理}
 \label{sec-1-7}
+\begin{itemize}
+\item 主要是以牌桌上的：什么地主牌呀，一些清空（选中选中过的牌，就是跳高跳出来准备出的，为什么先前没有处理？），重置，等预处理
+\item 牌桌，地主牌
 \begin{minted}[fontsize=\scriptsize,linenos=false]{csharp}
 [MessageHandler]
 public class Actor_GameStart_NttHandler : AMHandler<Actor_GameStart_Ntt> {
@@ -770,18 +775,360 @@ public class Actor_GameStart_NttHandler : AMHandler<Actor_GameStart_Ntt> {
     }
 }
 \end{minted}
-\subsubsection{【任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！】}
+\end{itemize}
+\subsubsection{GamerUIComponent: 每个玩家身上所背的UI 小面板，用来显示这个玩家的相关信息}
 \label{sec-1-7-1}
-\subsubsection{【爱表哥，爱生活！！！】}
-\label{sec-1-7-2}
-\subsubsection{【任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！】}
-\label{sec-1-7-3}
-\section{源码梳理：用作【参考项目】来指导拖拉机项目的重构。}
+\begin{itemize}
+\item 包括UI 面板，必要的用户信息，玩家昵称
+\item 功能包括：抢不抢地主什么的
+\item LandlordsInteractionComponent: 它说，这个组件更像是出牌互动功能模块？
+\begin{minted}[fontsize=\scriptsize,linenos=false]{csharp}
+// 每个玩家的UI组件
+public class GamerUIComponent : Component {
+    // UI面板
+    public GameObject Panel { get; private set; }
+    // 玩家昵称
+    public string NickName { get { return name.text; } }
+    private Image headPhoto;
+    private Text prompt;
+    private Text name;
+    private Text money;
+    public void Start() {
+        if (this.GetParent<Gamer>().IsReady) 
+            SetReady();
+    }
+    // 重置面板
+    public void ResetPanel() {
+        ResetPrompt();
+        this.headPhoto.gameObject.SetActive(false);
+        this.name.text = "空位";
+        this.money.text = "";
+        this.Panel = null;
+        this.prompt = null;
+        this.name = null;
+        this.money = null;
+        this.headPhoto = null;
+    }
+    // 设置面板
+    public void SetPanel(GameObject panel) {
+        this.Panel = panel;
+        // 绑定关联
+        this.prompt = this.Panel.Get<GameObject>("Prompt").GetComponent<Text>();
+        this.name = this.Panel.Get<GameObject>("Name").GetComponent<Text>();
+        this.money = this.Panel.Get<GameObject>("Money").GetComponent<Text>();
+        this.headPhoto = this.Panel.Get<GameObject>("HeadPhoto").GetComponent<Image>();
+        UpdatePanel();
+    }
+    // 更新面板
+    public void UpdatePanel() {
+        if (this.Panel != null) {
+            SetUserInfo();
+            headPhoto.gameObject.SetActive(false);
+        }
+    }
+    // 设置玩家身份
+    public void SetIdentity(Identity identity) {
+        if (identity == Identity.None)
+            return;
+        string spriteName = $"Identity_{Enum.GetName(typeof(Identity), identity)}";
+        Sprite headSprite = CardHelper.GetCardSprite(spriteName);
+        headPhoto.sprite = headSprite;
+        headPhoto.gameObject.SetActive(true);
+    }
+    // 玩家准备
+    public void SetReady() {// 去搜一下：为什么会需要这个准备按钮？
+        prompt.text = "准备！";
+    }
+    // 出牌错误
+    public void SetPlayCardsError() {
+        prompt.text = "您出的牌不符合规则！";
+    }
+    // 玩家不出
+    public void SetDiscard() {
+        prompt.text = "不出";
+    }
+    // 玩家抢地主：抢不抢地主
+    public void SetGrab(GrabLandlordState state) {
+        switch (state) {
+            case GrabLandlordState.Not:
+                break;
+            case GrabLandlordState.Grab:
+                prompt.text = "抢地主";
+                break;
+            case GrabLandlordState.UnGrab:
+                prompt.text = "不抢";
+                break;
+        }
+    }
+    // 重置提示
+    public void ResetPrompt() {
+        prompt.text = "";
+    }
+    // 游戏开始
+    public void GameStart() {
+        ResetPrompt();
+    }
+    // 设置用户信息
+    private async void SetUserInfo() {
+        G2C_GetUserInfo_Ack g2C_GetUserInfo_Ack = await SessionComponent.Instance.Session.Call(new C2G_GetUserInfo_Req() { UserID = this.GetParent<Gamer>().UserID }) as G2C_GetUserInfo_Ack;
+        if (this.Panel != null) {
+            name.text = g2C_GetUserInfo_Ack.NickName;
+            money.text = g2C_GetUserInfo_Ack.Money.ToString();
+        }
+    }
+    public override void Dispose() {
+        if (this.IsDisposed) 
+            return;
+        base.Dispose();
+        // 重置玩家UI
+        ResetPanel();
+    }
+}
+\end{minted}
+\end{itemize}
+
+\subsection{C2G\_GetUserInfo\_ReqHandler:【网关服】处理用户信息查询请求：它就去拿数据库相关组件。因为 ET7 重构了数据库模块，这里这略过。}
+\label{sec-1-8}
+\begin{minted}[fontsize=\scriptsize,linenos=false]{csharp}
+[MessageHandler(AppType.Gate)]
+public class C2G_GetUserInfo_ReqHandler : AMRpcHandler<C2G_GetUserInfo_Req, G2C_GetUserInfo_Ack> {
+    protected override async void Run(Session session, C2G_GetUserInfo_Req message, Action<G2C_GetUserInfo_Ack> reply) {
+        G2C_GetUserInfo_Ack response = new G2C_GetUserInfo_Ack();
+        try {
+            // 验证Session
+            if (!GateHelper.SignSession(session)) {
+                response.Error = ErrorCode.ERR_SignError;
+                reply(response);
+                return;
+            }
+            // 查询用户信息
+            DBProxyComponent dbProxyComponent = Game.Scene.GetComponent<DBProxyComponent>();
+            UserInfo userInfo = await dbProxyComponent.Query<UserInfo>(message.UserID, false);
+            response.NickName = userInfo.NickName;
+            response.Wins = userInfo.Wins;
+            response.Loses = userInfo.Loses;
+            response.Money = userInfo.Money;
+            reply(response);
+        }
+        catch (Exception e) {
+            ReplyError(response, e, reply);
+        }
+    }
+}
+\end{minted}
+
+
+\section{准备按钮： Prompt-text, 可是它是可点击的按钮 promptButton}
 \label{sec-2}
+\subsection{promptButton: OnPrompt() 回调函数}
+\label{sec-2-1}
+\begin{itemize}
+\item 从游戏界面上看，这个回调后，本地玩家的手牌显示出来了。地主的三张牌画出背面，不能看
+\item 并在本地玩家手牌显示出来后，玩家看过自己的手牌，接下来可以决定：是否抢地主
+\begin{minted}[fontsize=\scriptsize,linenos=false]{csharp}
+private async void OnPrompt() { // 提示
+    Actor_GamerPrompt_Req request = new Actor_GamerPrompt_Req();
+    Actor_GamerPrompt_Ack response = await SessionComponent.Instance.Session.Call(request) as Actor_GamerPrompt_Ack;
+    GamerComponent gamerComponent = this.GetParent<UI>().GetParent<UI>().GetComponent<GamerComponent>();
+    HandCardsComponent handCards = gamerComponent.LocalGamer.GetComponent<HandCardsComponent>();
+    // 清空当前选中
+    while (currentSelectCards.Count > 0) {
+        Card selectCard = currentSelectCards[currentSelectCards.Count - 1];
+        handCards.GetSprite(selectCard).GetComponent<HandCardSprite>().OnClick(null);
+    }
+    // 自动选中提示出牌：这应该是出牌辅助，
+    if (response.Cards != null) 
+        foreach (Card card in response.Cards) {
+            handCards.GetSprite(card).GetComponent<HandCardSprite>().OnClick(null);
+        }
+}
+\end{minted}
+\end{itemize}
+\subsection{Actor\_GamerPrompt\_ReqHandler:【地图服】说，你不是假人，那我就给你分牌，给你手里的牌排好序，然后下发给你【客户端】}
+\label{sec-2-2}
+\begin{minted}[fontsize=\scriptsize,linenos=false]{csharp}
+[ActorMessageHandler(AppType.Map)]
+public class Actor_GamerPrompt_ReqHandler : AMActorRpcHandler<Gamer, Actor_GamerPrompt_Req, Actor_GamerPrompt_Ack> {
+    protected override async Task Run(Gamer gamer, Actor_GamerPrompt_Req message, Action<Actor_GamerPrompt_Ack> reply) {
+        Actor_GamerPrompt_Ack response = new Actor_GamerPrompt_Ack();
+        try {
+            Room room = Game.Scene.GetComponent<RoomComponent>().Get(gamer.RoomID);
+            OrderControllerComponent orderController = room.GetComponent<OrderControllerComponent>();
+            DeskCardsCacheComponent deskCardsCache = room.GetComponent<DeskCardsCacheComponent>();
+            List<Card> handCards = new List<Card>(gamer.GetComponent<HandCardsComponent>().GetAll());
+            CardsHelper.SortCards(handCards);
+            if (gamer.UserID == orderController.Biggest) {// 这个牌序，大小值，还没有看
+                response.Cards.AddRange(handCards.Where(card => card.CardWeight == handCards[handCards.Count - 1].CardWeight).ToArray());
+            }
+            else {
+                List<IList<Card>> result = await CardsHelper.GetPrompt(handCards, deskCardsCache, deskCardsCache.Rule);
+                if (result.Count > 0) 
+                    response.Cards.AddRange(result[RandomHelper.RandomNumber(0, result.Count)]);
+            }
+            reply(response);
+        }
+        catch (Exception e) {
+            ReplyError(response, e, reply);
+        }
+    }
+}
+\end{minted}
+\subsection{HandCardsComponentSystem: 处理玩家手牌的一些相关信息}
+\label{sec-2-3}
+\begin{minted}[fontsize=\scriptsize,linenos=false]{csharp}
+public static class HandCardsComponentSystem {
+    // 获取所有手牌
+    public static Card[] GetAll(this HandCardsComponent self) {
+        return self.library.ToArray();//self.library:readonly 是谁什么时候给它赋值的，就是它的手牌，一个玩家的手牌是怎么拿到的？
+    }
+    // 向牌库中添加牌
+    public static void AddCard(this HandCardsComponent self, Card card) {
+        self.library.Add(card);// 这里一张张加进来的，从哪里什么时候加进来的？游戏开始时，会添加本地玩家后里的牌
+    }
+    // 出牌
+    public static void PopCard(this HandCardsComponent self, Card card) {
+        self.library.Remove(card);
+    }
+    // 手牌排序
+    public static void Sort(this HandCardsComponent self) {
+        CardsHelper.SortCards(self.library);
+    }
+}
+\end{minted}
+\subsection{DeskCardsCacheComponentSystem: 发牌，添加牌，获取总值等相关操作，逻辑}
+\label{sec-2-4}
+\begin{minted}[fontsize=\scriptsize,linenos=false]{csharp}
+public static class DeskCardsCacheComponentSystem {
+    // 获取总权值
+    public static int GetTotalWeight(this DeskCardsCacheComponent self) {
+        return CardsHelper.GetWeight(self.library.ToArray(), self.Rule);
+    }
+    // 获取牌桌所有牌
+    public static Card[] GetAll(this DeskCardsCacheComponent self) {
+        return self.library.ToArray();
+    }
+    // 发牌
+    public static Card Deal(this DeskCardsCacheComponent self) {
+        Card card = self.library[self.CardsCount - 1];
+        self.library.Remove(card);
+        return card;
+    }
+    // 向牌库中添加牌
+    public static void AddCard(this DeskCardsCacheComponent self, Card card) {
+        self.library.Add(card);
+    }
+    // 清空牌桌
+    public static void Clear(this DeskCardsCacheComponent self) {
+        DeckComponent deck = self.GetParent<Entity>().GetComponent<DeckComponent>();
+        while (self.CardsCount > 0) {
+            Card card = self.library[self.CardsCount - 1];
+            self.library.Remove(card);
+            deck.AddCard(card);
+        }
+        self.Rule = CardsType.None;
+    }
+    // 手牌排序
+    public static void Sort(this DeskCardsCacheComponent self) {
+        CardsHelper.SortCards(self.library);
+    }
+}
+\end{minted}
+
+\section{抢地主按钮：抢与不抢}
+\label{sec-3}
+\subsection{Actor\_GamerGrabLandlordSelect\_NttHandler:【地图服】处理 抢地主逻辑。}
+\label{sec-3-1}
+\begin{minted}[fontsize=\scriptsize,linenos=false]{csharp}
+[ActorMessageHandler(AppType.Map)]
+public class Actor_GamerGrabLandlordSelect_NttHandler : AMActorHandler<Gamer, Actor_GamerGrabLandlordSelect_Ntt> {
+    protected override void Run(Gamer gamer, Actor_GamerGrabLandlordSelect_Ntt message) {
+        Room room = Game.Scene.GetComponent<RoomComponent>().Get(gamer.RoomID);
+        OrderControllerComponent orderController = room.GetComponent<OrderControllerComponent>();
+        GameControllerComponent gameController = room.GetComponent<GameControllerComponent>();
+        if (orderController.CurrentAuthority == gamer.UserID) {
+            // 保存玩家、抢地主意愿
+            orderController.GamerLandlordState[gamer.UserID] = message.IsGrab;
+            if (message.IsGrab) {
+                orderController.Biggest = gamer.UserID;
+                gameController.Multiples *= 2; // 只要有人抢，就翻倍？
+                room.Broadcast(new Actor_SetMultiples_Ntt() { Multiples = gameController.Multiples }); // 广播翻倍
+            }
+            // 转发消息
+            Actor_GamerGrabLandlordSelect_Ntt transpond = new Actor_GamerGrabLandlordSelect_Ntt();
+            transpond.IsGrab = message.IsGrab;
+            transpond.UserID = gamer.UserID;
+            room.Broadcast(transpond);
+            if (orderController.SelectLordIndex >= room.Count) {
+                 // * 地主：√ 农民1：× 农民2：×
+                 // * 地主：× 农民1：√ 农民2：√
+                 // * 地主：√ 农民1：√ 农民2：√ 地主：√
+                if (orderController.Biggest == 0) {
+                    // 没人抢地主则重新发牌
+                    gameController.BackToDeck();
+                    gameController.DealCards();
+                    // 发送玩家手牌
+                    Gamer[] gamers = room.GetAll();
+                    List<GamerCardNum> gamersCardNum = new List<GamerCardNum>();
+                    Array.ForEach(gamers, _gamer => gamersCardNum.Add(new GamerCardNum() {
+                            UserID = _gamer.UserID,
+                            Num = _gamer.GetComponent<HandCardsComponent>().GetAll().Length
+                            }));
+                    Array.ForEach(gamers, _gamer =>
+                        {
+                        ActorMessageSender actorProxy = _gamer.GetComponent<UnitGateComponent>().GetActorMessageSender();
+                        Actor_GameStart_Ntt actorMessage = new Actor_GameStart_Ntt();
+                        actorMessage.HandCards.AddRange(_gamer.GetComponent<HandCardsComponent>().GetAll());
+                        actorMessage.GamersCardNum.AddRange(gamersCardNum);
+                        });
+                    // 随机先手玩家
+                    gameController.RandomFirstAuthority();
+                    return;
+                }
+                else if ((orderController.SelectLordIndex == room.Count &&
+                          ((orderController.Biggest != orderController.FirstAuthority.Key && !orderController.FirstAuthority.Value) ||
+                           orderController.Biggest == orderController.FirstAuthority.Key)) ||
+                         orderController.SelectLordIndex > room.Count) {
+                    gameController.CardsOnTable(orderController.Biggest); // 开始出牌了
+                    return;
+                }
+            }
+            // 当所有玩家都抢地主时先手玩家还有一次抢地主的机会
+            if (gamer.UserID == orderController.FirstAuthority.Key && message.IsGrab) 
+                orderController.FirstAuthority = new KeyValuePair<long, bool>(gamer.UserID, true);
+            orderController.Turn(); // 轮家
+            orderController.SelectLordIndex++; // 轮家抢地方，就给了本地玩家先抢地主的机会，以及其它二家之后的再一次抢的机会。。
+            room.Broadcast(new Actor_AuthorityGrabLandlord_Ntt() { UserID = orderController.CurrentAuthority });// 给本地玩家再抢一次的机会
+        }
+    }
+}
+\end{minted}
+\subsection{Actor\_AuthorityGrabLandlord\_NttHandler}
+\label{sec-3-2}
+\begin{minted}[fontsize=\scriptsize,linenos=false]{csharp}
+[MessageHandler]
+public class Actor_AuthorityGrabLandlord_NttHandler : AMHandler<Actor_AuthorityGrabLandlord_Ntt> {
+    protected override void Run(ETModel.Session session, Actor_AuthorityGrabLandlord_Ntt message) {
+        UI uiRoom = Game.Scene.GetComponent<UIComponent>().Get(UIType.LandlordsRoom);
+        GamerComponent gamerComponent = uiRoom.GetComponent<GamerComponent>();
+        if (message.UserID == gamerComponent.LocalGamer.UserID) {
+            // 显示抢地主交互
+            uiRoom.GetComponent<LandlordsRoomComponent>().Interaction.StartGrab();// 就是两个按钮：抢与不抢，重新激活
+        }
+    }
+}
+\end{minted}
+\subsection{Actor\_SetLandlord\_NttHandler: 设置地主：亲爱的表哥永远是活宝妹这里最受尊重爱护的亲爱的表哥～～！！任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！}
+\label{sec-3-3}
+
+\subsection{出牌：还没看通，不知道这个界面怎么出来的}
+\label{sec-3-4}
+\section{源码梳理：用作【参考项目】来指导拖拉机项目的重构。}
+\label{sec-4}
 \begin{itemize}
 \item 这个文件，以前不知道总结的是些什么乱七八糟的。现在重点梳理：斗地主的游戏逻辑相关
 \item 目的是用作参考，来指导自己【拖拉机游戏】的重构。
 \item 所以就按照界面相关的形式，或是几个按钮回调的形式来梳理游戏逻辑的【客户端】请求与【服务端】的处理请求
+\item 把这些慢慢看得差不多，就可以试着开始想：拖拉机要怎么才能设计成这川可以与服务器交互的多人网络游戏呢？【任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！】
 \item 【任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！爱表哥，爱生活！！！】
 \end{itemize}
 % Emacs 28.2 (Org mode 8.2.7c)

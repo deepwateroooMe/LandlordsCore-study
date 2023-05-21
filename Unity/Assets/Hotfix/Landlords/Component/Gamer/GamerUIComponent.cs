@@ -9,7 +9,7 @@ namespace ETHotfix {
             self.Start();
         }
     }
-    // 玩家UI组件
+    // 每个玩家的UI组件
     public class GamerUIComponent : Component {
         // UI面板
         public GameObject Panel { get; private set; }
@@ -20,9 +20,8 @@ namespace ETHotfix {
         private Text name;
         private Text money;
         public void Start() {
-            if (this.GetParent<Gamer>().IsReady) {
+            if (this.GetParent<Gamer>().IsReady) 
                 SetReady();
-            }
         }
         // 重置面板
         public void ResetPanel() {
@@ -104,13 +103,11 @@ namespace ETHotfix {
             }
         }
         public override void Dispose() {
-            if (this.IsDisposed) {
+            if (this.IsDisposed) 
                 return;
-            }
             base.Dispose();
             // 重置玩家UI
             ResetPanel();
         }
     }
 }
-

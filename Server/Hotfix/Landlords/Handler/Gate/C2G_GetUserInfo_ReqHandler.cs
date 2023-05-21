@@ -1,7 +1,6 @@
 ﻿using System;
 using ETModel;
 namespace ETHotfix {
-
     [MessageHandler(AppType.Gate)]
     public class C2G_GetUserInfo_ReqHandler : AMRpcHandler<C2G_GetUserInfo_Req, G2C_GetUserInfo_Ack> {
         protected override async void Run(Session session, C2G_GetUserInfo_Req message, Action<G2C_GetUserInfo_Ack> reply) {
