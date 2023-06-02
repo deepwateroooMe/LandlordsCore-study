@@ -2,19 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using MongoDB.Bson.Serialization.Attributes;
-
 namespace ETModel {
 
     [BsonIgnoreExtraElements]
     public class Entity : ComponentWithId {
-
         [BsonElement("C")]
         [BsonIgnoreIfNull]
         private HashSet<Component> components;
-
         [BsonIgnore]
         private Dictionary<Type, Component> componentDict;
-
         public Entity() {
             this.components = new HashSet<Component>();
             this.componentDict = new Dictionary<Type, Component>();
@@ -23,7 +19,6 @@ namespace ETModel {
             this.components = new HashSet<Component>();
             this.componentDict = new Dictionary<Type, Component>();
         }
-
         public override void Dispose() {
             if (this.IsDisposed) {
                 return;
@@ -40,14 +35,12 @@ namespace ETModel {
             this.components.Clear();
             this.componentDict.Clear();
         }
-
- // AddComponent: 回字的无数样写法。。。。。        
+        // AddComponent: 回字的无数样写法。。。。。        
         public virtual Component AddComponent(Component component) {
             Type type = component.GetType();
             if (this.componentDict.ContainsKey(type)) {
                 throw new Exception($"AddComponent, component already exist, id: {this.Id}, component: {type.Name}");
             }
-            
             component.Parent = this;
             if (component is ISerializeToEntity) {
                 this.components.Add(component);
@@ -84,7 +77,6 @@ namespace ETModel {
                 throw new Exception($"AddComponent, component already exist, id: {this.Id}, component: {typeof(K).Name}");
             }
             K component = ComponentFactory.CreateWithParent<K, P1>(this, p1);
-            
             if (component is ISerializeToEntity) {
                 this.components.Add(component);
             }
@@ -97,7 +89,6 @@ namespace ETModel {
                 throw new Exception($"AddComponent, component already exist, id: {this.Id}, component: {typeof(K).Name}");
             }
             K component = ComponentFactory.CreateWithParent<K, P1, P2>(this, p1, p2);
-            
             if (component is ISerializeToEntity) {
                 this.components.Add(component);
             }
@@ -110,14 +101,12 @@ namespace ETModel {
                 throw new Exception($"AddComponent, component already exist, id: {this.Id}, component: {typeof(K).Name}");
             }
             K component = ComponentFactory.CreateWithParent<K, P1, P2, P3>(this, p1, p2, p3);
-            
             if (component is ISerializeToEntity) {
                 this.components.Add(component);
             }
             this.componentDict.Add(type, component);
             return component;
         }
-
 // RemoveComponent:
         public virtual void RemoveComponent<K>() where K : Component {
             if (this.IsDisposed) {
@@ -144,8 +133,7 @@ namespace ETModel {
             this.componentDict.Remove(type);
             component.Dispose();
         }
-
- // GetComponent:        
+        // GetComponent:        
         public K GetComponent<K>() where K : Component {
             Component component;
             if (!this.componentDict.TryGetValue(typeof(K), out component)) {
@@ -163,16 +151,14 @@ namespace ETModel {
         public Component[] GetComponents() {
             return this.componentDict.Values.ToArray();
         }
-
- // EndInit: 查一下这个接口是从哪里来的？        
+        // EndInit: 查一下这个接口是从哪里来的？        
         public override void EndInit() {
             try {
                 base.EndInit();
                 
                 this.componentDict.Clear();
                 if (this.components != null) {
-                    foreach (Component component in this.components)
-                    {
+                    foreach (Component component in this.components) {
                         component.Parent = this;
                         this.componentDict.Add(component.GetType(), component);
                     }
@@ -182,8 +168,7 @@ namespace ETModel {
                 Log.Error(e);
             }
         }
-        
- //  BeginSerialize + EndDeSerialize
+        //  BeginSerialize + EndDeSerialize
         public override void BeginSerialize() {
             base.BeginSerialize();
             foreach (Component component in this.components) {
@@ -192,7 +177,6 @@ namespace ETModel {
         }
         public override void EndDeSerialize() {
             base.EndDeSerialize();
-            
             foreach (Component component in this.components) {
                 component.EndDeSerialize();
             }

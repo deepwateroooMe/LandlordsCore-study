@@ -2,16 +2,11 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-
-namespace ETModel
-{
-    public class HandCardSprite : MonoBehaviour
-    {
+namespace ETModel {
+    public class HandCardSprite : MonoBehaviour {
         public Card Poker { get; set; }
         private bool isSelect;
-
-        void Start()
-        {
+        void Start() {
             EventTrigger eventTrigger = gameObject.AddComponent<EventTrigger>();
             eventTrigger.triggers = new List<EventTrigger.Entry>();
             EventTrigger.Entry clickEntry = new EventTrigger.Entry();
@@ -20,17 +15,12 @@ namespace ETModel
             clickEntry.callback.AddListener(new UnityAction<BaseEventData>(OnClick));
             eventTrigger.triggers.Add(clickEntry);
         }
-
-        public void OnClick(BaseEventData data)
-        {
+        public void OnClick(BaseEventData data) {
             float move = 50.0f;
-            if (isSelect)
-            {
+            if (isSelect) {
                 move = -move;
                 Game.EventSystem.Run(EventIdType.CancelHandCard, Poker);
-            }
-            else
-            {
+            } else {
                 Game.EventSystem.Run(EventIdType.SelectHandCard, Poker);
             }
             RectTransform rectTransform = this.GetComponent<RectTransform>();

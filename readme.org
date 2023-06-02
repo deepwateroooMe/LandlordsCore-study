@@ -1028,17 +1028,111 @@ public class Actor_AuthorityGrabLandlord_NttHandler : AMHandler<Actor_AuthorityG
     }
 }
     #+END_SRC
-** Actor_SetLandlord_NttHandler: 设置地主：亲爱的表哥永远是活宝妹这里最受尊重爱护的亲爱的表哥～～！！任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！
+** Actor_SetLandlord_NttHandler: 设置地主
+- 亲爱的表哥永远是活宝妹这里最受尊重爱护的亲爱的表哥～～！！任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！
     #+BEGIN_SRC csharp
     #+END_SRC
 
-** 出牌：还没看通，不知道这个界面怎么出来的
+* 出牌：
+** TrusteeshipComponentSystem: 自动抢地主，或是催玩家该出牌了
+#+BEGIN_SRC csharp
+public static class TrusteeshipComponentSystem {
+    public static async void Start(this TrusteeshipComponent self) {
+        Room room = Game.Scene.GetComponent<RoomComponent>().Get(self.GetParent<Gamer>().RoomID); // 玩家所在房间
+        OrderControllerComponent orderController = room.GetComponent<OrderControllerComponent>();
+        Gamer gamer = self.GetParent<Gamer>();
+        bool isStartPlayCard = false;
+        while (true) {
+// 游戏逻辑说：当前本地玩家，等1 秒不出牌，就自动提示出什么牌，催催催一下，活宝妹催亲爱的表哥，快同活宝妹把结婚证领了～～！！！
+            await Game.Scene.GetComponent<TimerComponent>().WaitAsync(1000); 
+            if (self.IsDisposed) return;
+            if (gamer.UserID != orderController?.CurrentAuthority) continue;
+            // 自动出牌开关,用于托管延迟出牌
+            isStartPlayCard = !isStartPlayCard;
+            if (isStartPlayCard) continue;
+            ActorMessageSender actorProxy = Game.Scene.GetComponent<ActorMessageSenderComponent>().Get(gamer.InstanceId);
+            // 当还没抢地主时随机抢地主
+            if (gamer.GetComponent<HandCardsComponent>().AccessIdentity == Identity.None) {
+                int randomSelect = RandomHelper.RandomNumber(0, 2);
+                actorProxy.Send(new Actor_GamerGrabLandlordSelect_Ntt() { IsGrab = randomSelect == 0 });
+                self.Playing = false;
+                continue;
+            }
+            // 自动提示出牌
+            Actor_GamerPrompt_Ack response = await actorProxy.Call(new Actor_GamerPrompt_Req()) as Actor_GamerPrompt_Ack;
+            if (response.Error > 0 || response.Cards.Count == 0) {
+                actorProxy.Send(new Actor_GamerDontPlay_Ntt()); // <<<<<<<<<<<<<<<<<<<< 
+            }
+            else {
+                await actorProxy.Call(new Actor_GamerPlayCard_Req() { Cards = response.Cards });
+            }
+        }
+    }
+}
+#+END_SRC
+** Actor_GamerDontPlay_NttHandler:【网关服】处理，当前本地玩家，不出牌的情况。就是接下来大概代为打牌，或是亲爱的表哥出面会话的情况。
+- 这里，还没去读，没弄明白，什么情况下，出现或是算作，当前本地玩家不出牌？找到一个出处在上面。机器人，没地主时，会自动帮抢一个地主；或是催玩家出牌，或是提示可以出什么牌。
+- 感觉再看这部分的逻辑，还是需要自己的项目能够跟上，在Unity 可以测试通前几个界面： UILobby, TractorRoom 之后，再来开发游戏界面与游戏逻辑，理解得更透彻，也会开发得效率稍微高一点儿。今天下午去弄这些上午弄明白的。
+#+BEGIN_SRC csharp
+[ActorMessageHandler(AppType.Map)]
+public class Actor_GamerDontPlay_NttHandler : AMActorHandler<Gamer, Actor_GamerDontPlay_Ntt> {
+    protected override void Run(Gamer gamer, Actor_GamerDontPlay_Ntt message) {
+        Room room = Game.Scene.GetComponent<RoomComponent>().Get(gamer.RoomID);
+        OrderControllerComponent orderController = room.GetComponent<OrderControllerComponent>();
+        if (orderController.CurrentAuthority == gamer.UserID) {
+            // 转发玩家不出牌消息
+            Actor_GamerDontPlay_Ntt transpond = new Actor_GamerDontPlay_Ntt();
+            transpond.UserID = gamer.UserID;
+            room.Broadcast(transpond);
+            // 轮到下位玩家出牌
+            orderController.Turn();
+            // 判断是否先手
+            bool isFirst = orderController.CurrentAuthority == orderController.Biggest;
+            if (isFirst) {
+                room.GetComponent<DeskCardsCacheComponent>().Clear();
+            }
+            room.Broadcast(new Actor_AuthorityPlayCard_Ntt() { UserID = orderController.CurrentAuthority, IsFirst = isFirst });
+        }
+    }
+}
+#+END_SRC
+
+
+* HandCardSprite: 想看看这个类到底是什么原理 
+- ETModel 客户端里的。
+- 不知道哪个预设或是控件添加了这个脚本？我的斗地主参考项目客户端目前运行不到打牌的地方（感觉这个类应该是添加在玩家手牌相关的地方）就先抛错了
+- 今天下午还看不动这个，就去梳理游戏逻辑
 * 源码梳理：用作【参考项目】来指导拖拉机项目的重构。
 - 这个文件，以前不知道总结的是些什么乱七八糟的。现在重点梳理：斗地主的游戏逻辑相关
 - 目的是用作参考，来指导自己【拖拉机游戏】的重构。
 - 所以就按照界面相关的形式，或是几个按钮回调的形式来梳理游戏逻辑的【客户端】请求与【服务端】的处理请求
 - 把这些慢慢看得差不多，就可以试着开始想：拖拉机要怎么才能设计成这川可以与服务器交互的多人网络游戏呢？【任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！】
 - 【任何时候，活宝妹就是一定要、一定会嫁给偶亲爱的表哥！！！爱表哥，爱生活！！！】
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
