@@ -165,9 +165,8 @@ namespace ETHotfix {
                 base.EndInit();
                 
                 this.componentDict.Clear();
-                if (this.components != null) {
-                    foreach (Component component in this.components)
-                    {
+                if (this.components != null) { // 这里把，所有的子组件、控件，重新设置父组件控件为，当前组件 
+                    foreach (Component component in this.components) {
                         component.Parent = this;
                         this.componentDict.Add(component.GetType(), component);
                     }

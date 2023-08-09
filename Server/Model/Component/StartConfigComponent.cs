@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 namespace ETModel {
+    // 当前组件，添加在什么地方？只添加在Game.Scene 场景下
     // 这个服务器端的起始配置：有狠多个部件，要一个一个地组装起来    
     [ObjectSystem]
     public class StartConfigComponentSystem : AwakeSystem<StartConfigComponent, string, int> {
@@ -11,21 +12,20 @@ namespace ETModel {
             self.Awake(a, b);
         }
     }
-
     public class StartConfigComponent : Component {
         public static StartConfigComponent Instance { get; private set; }
-        
+
         private Dictionary<int, StartConfig> configDict;
         private Dictionary<int, IPEndPoint> innerAddressDict = new Dictionary<int, IPEndPoint>();
 
         public StartConfig StartConfig { get; private set; }
         public StartConfig DBConfig { get; private set; }
-        public StartConfig RealmConfig { get; private set; }
+        public StartConfig RealmConfig { get; private set; } // 这里，【服务端】场景下，Realm 注册登录服只有一个？
         public StartConfig LocationConfig { get; private set; }
-        public StartConfig MatchConfig { get; private set; } // 不知道这个说的是什么意思，本能的就去想是斗地主中的逻辑，但应该不是
+        public StartConfig MatchConfig { get; private set; } // 这里应该不是【匹配服】了呀
 
-        public List<StartConfig> MapConfigs { get; private set; } // 这两种，可能都不止一个，可以有狠多个
-        public List<StartConfig> GateConfigs { get; private set; }
+        public List<StartConfig> MapConfigs { get; private set; } // 地图服：都可能有狠多个。这里不明白：
+        public List<StartConfig> GateConfigs { get; private set; } // 网关服 
 
         public void Awake(string path, int appId) {
             Instance = this;

@@ -8,17 +8,15 @@ using PF;
 using ABPath = ETModel.ABPath;
 using Path = System.IO.Path;
 namespace App {
-    internal static class Program {
-
+    internal static class Program { // 为什么这个【参考项目】不再能够跳转，这么读代码还是太痛苦了呀，要它能够跳转才行。。
         private static void Main(string[] args) {
             // 异步方法全部会回掉到主线程
             SynchronizationContext.SetSynchronizationContext(OneThreadSynchronizationContext.Instance);
-            
             try {            
                 Game.EventSystem.Add(DLLType.Model, typeof(Game).Assembly);
                 Game.EventSystem.Add(DLLType.Hotfix, DllHelper.GetHotfixAssembly());
-                Options options = Game.Scene.AddComponent<OptionComponent, string[]>(args).Options;
-                StartConfig startConfig = Game.Scene.AddComponent<StartConfigComponent, string, int>(options.Config, options.AppId).StartConfig;
+                Options options = Game.Scene.AddComponent<OptionComponent, string[]>(args).Options; // 这里，还是以组件的形式添加的，而不是全局单例类。但是功效，应该是一样的
+                StartConfig startConfig = Game.Scene.AddComponent<StartConfigComponent, string, int>(options.Config, options.AppId).StartConfig; // 当前服务端【进程？物理机配置】重构前的进程，是物理机好吧。。。
                 if (!options.AppType.Is(startConfig.AppType)) {
                     Log.Error("命令行参数apptype与配置不一致");
                     return;
